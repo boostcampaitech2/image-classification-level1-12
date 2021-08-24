@@ -24,9 +24,9 @@
             "amsgrad": true
         }
     },
-    "loss": "nll_loss",
+    "loss": "F1_loss",
     "metrics": [
-        "accuracy", "top_k_acc"
+        "accuracy", "accuracy"
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -38,7 +38,7 @@
     "trainer": {
         "epochs": 100,
 
-        "save_dir": "saved/",
+        "save_dir": "/opt/ml/repos/project_LJH/saved/",
         "save_period": 1,
         "verbosity": 2,
         
