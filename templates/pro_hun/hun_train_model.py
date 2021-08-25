@@ -112,11 +112,11 @@ if __name__ == "__main__":
         ]
     )
 
-    LEARNING_RATE = 0.0001  # 학습 때 사용하는 optimizer의 학습률 옵션 설정
-    NUM_EPOCH = 10  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
 
-    total_acc = 0
-    total_loss = 0
+    LEARNING_RATE = 0.0001  # 학습 때 사용하는 optimizer의 학습률 옵션 설정
+    NUM_EPOCH = 20  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
+
+
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
     )
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     )
     dirname.mkdir(parents=True, exist_ok=False)
     st_time = time.time()
-    for idx in range(5):
+    for i in range(5):
         mnist_resnet18 = resnet_finetune(resnet18, 18).to(device) # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
 
 
@@ -138,14 +138,14 @@ if __name__ == "__main__":
             mnist_resnet18.parameters(), lr=LEARNING_RATE
         )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
 
-        train_dataset = Mask_Dataset(data_transform, f"train{idx}", train_list[idx])
+        train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=128,
             collate_fn=collate_fn,
             #  num_workers=2
         )
-        val_dataset = Mask_Dataset(data_transform, f"val{idx}", val_list[idx])
+        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=128,
@@ -160,6 +160,7 @@ if __name__ == "__main__":
         best_test_loss = 9999.0
     
         flag = True
+        early_ind = 0
         pred_f1 = 0.0    
         for epoch in range(NUM_EPOCH):
             epoch_f1 = 0
@@ -218,12 +219,15 @@ if __name__ == "__main__":
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
                 if (phase=='test') :
-                    if pred_f1 <= epoch_f1 or pred_f1 <= 0.11 or epoch >= 7 :
+                    if pred_f1 <= epoch_f1:
                         pred_f1 = epoch_f1
-                        torch.save(mnist_resnet18, os.path.join(dirname, f"model_mnist{idx}.pickle"))
+                        torch.save(mnist_resnet18, os.path.join(dirname, f"model_mnist{i}.pickle"))
+                        early_ind = 0
                     else :
-                        flag=False
-                        break
+                        early_ind += 1 
+                        if early_ind == 2 :
+                            flag=False
+                            break
 
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")

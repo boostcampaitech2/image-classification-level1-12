@@ -66,7 +66,6 @@ if __name__ == "__main__":
     model_listdir = os.listdir(model_path)
     all_predictions = [[] for _ in range(len(loader))]
     for moli in model_listdir:
-        print(f"\r model_name: {moli}")
         model = torch.load(os.path.join(model_path, moli))
         model.eval()
 
@@ -84,9 +83,9 @@ if __name__ == "__main__":
             idx += 1
             if idx % 500 == 0:
                 ed_time = time.time()
-                use_time = ed_time - st_time
+                use_time = round(ed_time - st_time, 2)
                 remian_time = round((use_time / idx) * (len(loader) - idx), 2)
-                print(f"\r걸린 시간 : {use_time}, \t남은 시간: {remian_time}", end="")
+                print(f"\r{moli} 걸린 시간 : {use_time:10s}, \t남은 시간: {remian_time}", end="")
 
     all_predictions = [all_pre.argmax() for all_pre in all_predictions]
     submission["ans"] = all_predictions
