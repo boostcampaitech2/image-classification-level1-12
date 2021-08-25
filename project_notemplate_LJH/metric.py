@@ -1,5 +1,5 @@
 import torch
-
+from sklearn.metrics import f1_score
 
 def accuracy(output, target):
     with torch.no_grad():
@@ -18,3 +18,6 @@ def top_k_acc(output, target, k=3):
         for i in range(k):
             correct += torch.sum(pred[:, i] == target).item()
     return correct / len(target)
+
+def F_score(output, target):
+    return f1_score(output.item(), target.item())

@@ -93,11 +93,11 @@ for idx, (train, valid, test) in enumerate(train_cv):
                 valid_loss[1].append(loss_mask.item())
                 valid_loss[2].append(loss_gender.item())
 
-                valid_acc[0].append(acc_age.item())
-                valid_acc[1].append(acc_mask.item())
-                valid_acc[2].append(acc_gender.item())
+                valid_acc[0].append(acc_age)
+                valid_acc[1].append(acc_mask)
+                valid_acc[2].append(acc_gender)
             
-        print(f'    valid epoch {e} total loss: {loss_sum.item()}, age_acc: {acc_age.item()}, mask_acc: {acc_mask.item()}, gender_acc = {acc_gender.item()}')
+        print(f'    valid epoch {e} total loss: {loss_sum.item()}, age_acc: {acc_age}, mask_acc: {acc_mask}, gender_acc = {acc_gender}')
     
     cv_train_loss.append(train_loss)
     cv_valid_loss.append(valid_loss)
@@ -116,10 +116,10 @@ for idx, (train, valid, test) in enumerate(train_cv):
         loss_sum = loss_age+loss_mask+loss_gender
 
     idx += 1
-    cv_test_acc.append([acc_age.item()/idx, acc_mask.item()/idx, acc_gender.item()/idx])
-    cv_test_loss.append([loss_sum.item(), loss_age.item(), loss_mask.item(), loss_gender.item()])
+    cv_test_acc.append([acc_age/idx, acc_mask/idx, acc_gender/idx])
+    cv_test_loss.append([loss_sum.item(), loss_age, loss_mask, loss_gender])
 
-    print(f'    test epoch {e} total loss: {loss_sum.item()}, average_age_acc: {acc_age.item()}, average_mask_acc: {acc_mask.item()}, average_gender_acc = {acc_gender.item()}')  
+    print(f'    test epoch {e} total loss: {loss_sum.item()}, average_age_acc: {acc_age}, average_mask_acc: {acc_mask}, average_gender_acc = {acc_gender}')  
         
 
 out = []
