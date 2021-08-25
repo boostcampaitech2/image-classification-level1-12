@@ -33,28 +33,30 @@ class MaskModel(nn.Module):
         self.linear_mask_2 = nn.Linear(256, 3, bias=True)
 
         self.linear_gender_1 = nn.Linear(1000, 256, bias=True)
-        self.linear_gender_2 = nn.Linear(256, 1, bias=True)
+        self.linear_gender_2 = nn.Linear(256, 2, bias=True)
 
         self.linear_age_1 = nn.Linear(1000, 256, bias=True)
         self.linear_age_2 = nn.Linear(256, 3, bias=True)
 
     def forward(self, x):
+        x = self.vgg19(x)
+
         x = F.relu(x)
-        x = F.dropout(x, training=self.training)
+        # x = F.dropout(x, training=self.training)
 
         x_mask = self.linear_mask_1(x)
         x_mask = F.relu(x_mask)
-        x_mask = F.dropout(x_mask, training=self.training)
+        # x_mask = F.dropout(x_mask, training=self.training)
         x_mask = self.linear_mask_2(x_mask)
 
         x_gender = self.linear_gender_1(x)
         x_gender = F.relu(x_gender)
-        x_gender = F.dropout(x_gender, training=self.training)
-        x_gender = self.linear_mask_2(x_gender)
+        # x_gender = F.dropout(x_gender, training=self.training)
+        x_gender = self.linear_gender_2(x_gender)
 
         x_age = self.linear_age_1(x)
         x_age = F.relu(x_age)
-        x_age = F.dropout(x_age, training=self.training)
+        # x_age = F.dropout(x_age, training=self.training)
         x_age = self.linear_age_2(x_age)
 
         return x_mask, x_gender, x_age

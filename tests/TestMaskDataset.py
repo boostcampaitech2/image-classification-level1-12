@@ -7,7 +7,7 @@ if __name__ == "__main__":
     data_set = MaskDataset("/opt/ml/mask_data",
                                 train=True,
                                 num_folds=5,
-                                folds=(2,3),
+                                folds=[0, 1, 2, 3],
                                 transform=transforms.Compose([
                                     transforms.RandomHorizontalFlip(p=0.5),
                                     transforms.ToTensor(),

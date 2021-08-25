@@ -12,11 +12,12 @@ from torchvision.datasets.vision import VisionDataset
 
 class MaskDataset(VisionDataset):
 
-    TRAIN_IMAGE_TYPES = ("normal", "mask1", "mask2", "mask3", "mask4", "mask5", "incorrect")
+    TRAIN_IMAGE_TYPES = ("normal", "mask1", "mask2", "mask3", "mask4", "mask5", "incorrect_mask")
     TRAIN_FEATURES = ("id", "gender", "age_class", "image_path")
     GENDERS = ("male", "female")
     AGE_CLASSES = ("<30", ">=30 and <60", ">=60")
-    MASK_CLASSES = ("mask", "incorrect", "normal")
+    MASK_CLASSES = ("mask", "incorrect_mask", "normal")
+    IMAGE_FILE_EXTENSION = (".jpg", ".jpeg", ".png")
 
     def __init__(
             self,
@@ -87,7 +88,7 @@ class MaskDataset(VisionDataset):
                 {key: value for key, value in a_data.items() if key in ["id", "gender", "age", "race"]}
 
             for image_type in self.TRAIN_IMAGE_TYPES:
-                image_path = os.path.join(root + "/train/images/" + a_data["path"] + "/" + image_type + ".jpg")
+                image_path = os.path.join(root + "/train/images/" + a_data["path"] + "/" + image_type)
 
                 train_info = deepcopy(train_infos_except_mask)
                 train_info["mask"] = self._mask_to_mask_class(image_type)
@@ -111,20 +112,33 @@ class MaskDataset(VisionDataset):
                     "gender": 0,  # GENDERS = ("male", "female")
                     "age": 1  # AGE_CLASSES = ("<=18", ">=19 and <=59", ">=60"),
                     "race": "Asain"
-                    "mask": 0  # MASK_CLASSES = ("mask", "normal", "incorrect")
+                    "mask": 0  # MASK_CLASSES = ("mask", "incorrect_mask", "normal")
                 }
         if not train (eval)
             image path
-                /opt/ml/mask_data/eval/images/9da5ae3d63373e1e44e9a323d17779f2b661e50d.jpg
+                /opt/ml/mask_data/eval/images/9da5ae3d63373e1e44e9a323d17779f2b661e50d (file extension is not included)
             info
                 None
         """
         img_path, info = self.image_path_and_info_list[idx]
-        img = Image.open(img_path)
+
+        img = None
+        for image_file_extension in self.IMAGE_FILE_EXTENSION:
+            try:
+                img = Image.open(img_path + image_file_extension)
+                break
+            except FileNotFoundError:
+                continue
+        if not img:
+            raise FileNotFoundError(f'No such file: {img_path}{" or ".join(self.IMAGE_FILE_EXTENSION)}')
+
+        # img = np.array(img)
+
         if self.transform is not None:
             img = self.transform(img)
+        target = (info["mask"], info["gender"], info["age"])
 
-        return img, info
+        return img, target
 
     @classmethod
     def _age_to_age_class(cls, age):
@@ -150,7 +164,7 @@ class MaskDataset(VisionDataset):
 
         if mask_type.startswith("mask"):
             return 0
-        elif mask_type == "incorrect":
+        elif mask_type == "incorrect_mask":
             return 1
         elif mask_type == "normal":
             return 2

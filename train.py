@@ -15,6 +15,7 @@ from utils import prepare_device
 from data_loader.data_sets import MaskDataset
 from model.model import MaskModel
 from model.loss import MaskLoss
+# from model.loss import mask_total_loss
 
 
 # fix random seeds for reproducibility
@@ -30,7 +31,7 @@ def main(config):
 
     # define image transform
     transform = transforms.Compose([
-        transforms.Scale(244),
+        # transforms.Scale(244),
         transforms.CenterCrop(244),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.ToTensor(),
@@ -43,19 +44,21 @@ def main(config):
     train_dataset = MaskDataset("/opt/ml/mask_data",
                                 train=True,
                                 num_folds=5,
-                                folds=[0, 1, 2, 3]
+                                folds=[0, 1, 2, 3],
+                                transform=transform
                                 )
     valid_dataset = MaskDataset("/opt/ml/mask_data",
                                 train=True,
                                 num_folds=5,
-                                folds=[4]
+                                folds=[4],
+                                transform=transform
                                 )
     train_data_loader = DataLoader(train_dataset,
-                                   batch_size=16,
+                                   batch_size=64,
                                    shuffle=True,
                                    num_workers=8)
     valid_data_loader = DataLoader(valid_dataset,
-                                   batch_size=16,
+                                   batch_size=64,
                                    shuffle=True,
                                    num_workers=8)
 
@@ -64,7 +67,8 @@ def main(config):
     # build model architecture, then print to console
     # model = config.init_obj('arch', module_arch)
     # logger.info(model)
-    model = MaskModel
+    model = MaskModel()
+    # print(model)
 
     # prepare for (multi-device) GPU training
     device, device_ids = prepare_device(config['n_gpu'])
@@ -72,9 +76,12 @@ def main(config):
     if len(device_ids) > 1:
         model = torch.nn.DataParallel(model, device_ids=device_ids)
 
+    # device = 'cpu'
+
     # get function handles of loss and metrics
     # criterion = getattr(module_loss, config['loss'])
-    criterion = MaskLoss
+    # criterion = mask_total_loss
+    criterion = MaskLoss()
 
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 
@@ -95,7 +102,7 @@ def main(config):
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='PyTorch Template')
-    args.add_argument('-c', '--config', default=None, type=str,
+    args.add_argument('-c', '--config', default='./config.json', type=str,
                       help='config file path (default: None)')
     args.add_argument('-r', '--resume', default=None, type=str,
                       help='path to latest checkpoint (default: None)')

@@ -1,4 +1,24 @@
+from typing import Tuple
+
 import torch
+from torch import FloatTensor, LongTensor, Tensor
+
+
+def mask_total_accuracy(output: Tuple[Tensor, Tensor, Tensor], target: Tuple[Tensor, Tensor, Tensor]):
+    with torch.no_grad():
+        mask_pred = torch.argmax(output[0], dim=1)
+        gender_pred = torch.argmax(output[1], dim=1)
+        age_pred = torch.argmax(output[2], dim=1)
+
+        mask_correct = torch.eq(mask_pred, target[0])
+        gender_correct = torch.eq(gender_pred, target[1])
+        age_correct = torch.eq(age_pred, target[2])
+
+        total_correct = torch.bitwise_and(torch.bitwise_and(mask_correct, gender_correct), age_correct)
+
+        num_correct = torch.sum(total_correct)
+
+    return num_correct / len(total_correct)
 
 
 def accuracy(output, target):
