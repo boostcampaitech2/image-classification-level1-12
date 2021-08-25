@@ -73,7 +73,7 @@ class Mask_Dataset(object):
         self.imgs = list(
             sorted(
                 os.listdir(
-                    f"/opt/ml/pytorch-template/input/data/train/image_all/{self.name}_image"
+                    f"/opt/ml/image-classification-level1-12/templates/data/train/image_all/{self.name}_image"
                 )
             )
         )
@@ -94,7 +94,7 @@ class Mask_Dataset(object):
 
 
 if __name__ == "__main__":
-    train_path = "/opt/ml/pytorch-template/input/data/train"
+    train_path = "/opt/ml/image-classification-level1-12/templates/data/train"
     train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
     run_split = Run_Split(os.path.join(train_path, "image_all"))
     train_list, val_list = run_split.train_val_split(train_label)
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     )
     dirname = Path(
         os.path.join(
-            "/opt/ml/pytorch-template/project-hun/output/model", f"model_{now}"
+            "/opt/ml/image-classification-level1-12/templates/pro_hun/output/model", f"model_{now}"
         )
     )
     dirname.mkdir(parents=True, exist_ok=False)
@@ -159,9 +159,13 @@ if __name__ == "__main__":
         best_test_accuracy = 0.0
         best_test_loss = 9999.0
     
+        flag = True
+        pred_f1 = 0.0    
         for epoch in range(NUM_EPOCH):
             epoch_f1 = 0
             n_iter = 0
+
+            if not (flag) : break
             for phase in ["train", "test"]:
                 running_loss = 0.0
                 running_acc = 0.0
@@ -213,9 +217,16 @@ if __name__ == "__main__":
                     phase == "test" and best_test_loss > epoch_loss
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
+                if (phase=='test') :
+                    if pred_f1 <= epoch_f1 or pred_f1 <= 0.11 or epoch >= 7 :
+                        pred_f1 = epoch_f1
+                        torch.save(mnist_resnet18, os.path.join(dirname, f"model_mnist{idx}.pickle"))
+                    else :
+                        flag=False
+                        break
+
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
-        torch.save(mnist_resnet18, os.path.join(dirname, f"model_mnist{idx}.pickle"))
     ed_time = time.time()
     total_minute = (round(ed_time-st_time, 2))//60
     print(f'총 학습 시간 : {total_minute}분 소요되었습니다.')

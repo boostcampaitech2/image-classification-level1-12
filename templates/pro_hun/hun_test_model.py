@@ -41,7 +41,7 @@ class TestDataset(Dataset):
 
 
 if __name__ == "__main__":
-    test_dir = "/opt/ml/pytorch-template/input/data/eval"
+    test_dir = "/opt/ml/image-classification-level1-12/templates/data/eval"
     submission = pd.read_csv(os.path.join(test_dir, "info.csv"))
     image_dir = os.path.join(test_dir, "images")
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     dataset = TestDataset(image_paths, transform)
     loader = DataLoader(dataset, shuffle=False, num_workers=2)
 
-    # model_path = '/opt/ml/pytorch-template/project-hun/output/model/model_2021-08-25_043156'
+    # model_path = '/opt/ml/image-classification-level1-12/templates/pro_hun/output/model/model_2021-08-25_004053'
     model_path = input("학습한 모델의 경로를 입력해주세요 : ")
     model_listdir = os.listdir(model_path)
     all_predictions = [[] for _ in range(len(loader))]
@@ -95,5 +95,5 @@ if __name__ == "__main__":
     import datetime as dt
     # 제출할 파일을 저장합니다.
     now = (dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S"))
-    submission.to_csv(f"/opt/ml/pytorch-template/project-hun/output/sub/sub_{now}.csv", index=False)
+    submission.to_csv(f"/opt/ml/image-classification-level1-12/templates/pro_hun/output/sub/sub_{now}.csv", index=False)
     print("test inference is done!")

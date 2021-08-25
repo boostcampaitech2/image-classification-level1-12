@@ -46,7 +46,7 @@ class Make_Label:
 
         # 새로 만든 DataFrame 저장
         self.df.to_csv(
-            "/opt/ml/pytorch-template/input/data/train/train_with_label.csv",
+            "/opt/ml/image-classification-level1-12/templates/data/train/train_with_label.csv",
             index=False,
         )
 
@@ -75,7 +75,7 @@ class Make_Label:
 
 if __name__ == "__main__":
     # train 데이터 경로 지정
-    train_path = "/opt/ml/pytorch-template/input/data/train"
+    train_path = "/opt/ml/image-classification-level1-12/templates/data/train"
     # train 데이터를 데이터프레임 형태로
     train_df = pd.read_csv(os.path.join(train_path, "train.csv"))
 

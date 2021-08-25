@@ -22,7 +22,7 @@ class Run_Split:
 		train dataset을 train, val에 맞춰서 폴더 재생성
 
 		Args:
-		dirname (str): '/opt/ml/pytorch-template/input/data/train/image_all'
+		dirname (str): '/opt/ml/image-classification-level1-12/templates/data/train/image_all'
 		df (pd.DataFrame): train_df와 val_df
 		df_name (str): 입력된 df에 맞춰서 입력
 		"""
@@ -51,7 +51,7 @@ class Run_Split:
 
 
 if __name__ == "__main__":
-    train_path = "/opt/ml/pytorch-template/input/data/train"
+    train_path = "/opt/ml/image-classification-level1-12/templates/data/train"
     train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
     run_train = Run_Split(os.path.join(train_path, "image_all"))
     train_list, val_list = run_train.train_val_split(train_label)
