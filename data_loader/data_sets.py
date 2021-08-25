@@ -2,13 +2,15 @@ import os
 from copy import deepcopy
 from collections import defaultdict
 import random
+from typing import Callable, List, Optional
 
 import numpy as np
-from torch.utils.data import Dataset
 import pandas as pd
+from PIL import Image
+from torchvision.datasets.vision import VisionDataset
 
 
-class MaskDataset(Dataset):
+class MaskDataset(VisionDataset):
 
     TRAIN_IMAGE_TYPES = ("normal", "mask1", "mask2", "mask3", "mask4", "mask5", "incorrect")
     TRAIN_FEATURES = ("id", "gender", "age_class", "image_path")
@@ -16,18 +18,37 @@ class MaskDataset(Dataset):
     AGE_CLASSES = ("<30", ">=30 and <60", ">=60")
     MASK_CLASSES = ("mask", "incorrect", "normal")
 
-    def __init__(self, data_dir, train=True, num_folds=1, folds=(), random_seed=74):
+    def __init__(
+            self,
+            root: str,
+            train: bool = True,
+            num_folds: int = 1,
+            folds: Optional[List[int]] = None,
+            random_seed: int = 74,
+            transform: Optional[Callable] = None
+    ):
         """
-
-        :param data_dir: the absolute path of data directory
+        :param root: the absolute path of data directory
         :param train: train data를 원하는 경우 True, eval data를 원하는 경우 False
+        :param num_folds: the number of folds
+        :param folds: fold numbers to select, 0 ~ num_folds -1
+        :param random_seed: seed for shuffle
+        :param transform: transform to be applied to image
         """
+        super(MaskDataset, self).__init__(root, transform=transform)
+        self.train = train
+        self.num_folds = num_folds
+        self.folds = folds
+        if not self.folds:
+            folds = list(range(self.num_folds))
+        self.random_seed = random_seed
+
         self.selected_data = list()
 
-        if train:
+        if self.train:
             # read csv and shuffle
-            meta_data_all = pd.read_csv(os.path.join(data_dir + "/train/train.csv"))
-            np.random.seed(random_seed)
+            meta_data_all = pd.read_csv(os.path.join(root + "/train/train.csv"))
+            np.random.seed(self.random_seed)
             # 위 seed 설정은 아래 shuffle 직전에 항상 해주어야 한다.
             # Dataset이 어떠한 상황에서도 (여러번 옵션이 바뀌며 생성 되어도) split이 항상 동일하게 되게 하기 위함이다.
             meta_data_all = meta_data_all.sample(frac=1).reset_index(drop=True)
@@ -42,24 +63,23 @@ class MaskDataset(Dataset):
                 class_to_data_dict[(meta_row["gender"], meta_row["age"])].append(meta_row)
 
             # split each class data and select folds
-            if not folds:
-                folds = tuple(range(num_folds))
             for fold in folds:
                 for a_class, class_data in class_to_data_dict.items():
-                    start_idx = len(class_data) * fold // num_folds
-                    end_idx = len(class_data) * (fold + 1) // num_folds
+                    start_idx = len(class_data) * fold // self.num_folds
+                    end_idx = len(class_data) * (fold + 1) // self.num_folds
                     self.selected_data.extend(class_data[start_idx:end_idx])
             random.shuffle(self.selected_data)
         else:
             # read csv and shuffle
-            np.random.seed(random_seed)
-            self.selected_data = pd.read_csv(os.path.join(data_dir + "/eval/info.csv"))
+            np.random.seed(self.random_seed)
+            self.selected_data = pd.read_csv(os.path.join(root + "/eval/info.csv"))
             self.selected_data = self.selected_data.sample(frac=1).reset_index(drop=True)
 
+        # make the full paths of images and save them with target infos to the list
         self.image_path_and_info_list = list()
         for a_data in self.selected_data:
             if not train:
-                image_path = os.path.join(data_dir + "/eval/" + a_data["ImageID"] + ".jpg")
+                image_path = os.path.join(root + "/eval/" + a_data["ImageID"] + ".jpg")
                 info = None
                 self.image_path_and_info_list.append((image_path, info))
 
@@ -67,7 +87,7 @@ class MaskDataset(Dataset):
                 {key: value for key, value in a_data.items() if key in ["id", "gender", "age", "race"]}
 
             for image_type in self.TRAIN_IMAGE_TYPES:
-                image_path = os.path.join(data_dir + "/train/images/" + a_data["path"] + "/" + image_type + ".jpg")
+                image_path = os.path.join(root + "/train/images/" + a_data["path"] + "/" + image_type + ".jpg")
 
                 train_info = deepcopy(train_infos_except_mask)
                 train_info["mask"] = self._mask_to_mask_class(image_type)
@@ -99,7 +119,12 @@ class MaskDataset(Dataset):
             info
                 None
         """
-        return self.image_path_and_info_list[idx][0], self.image_path_and_info_list[idx][1]
+        img_path, info = self.image_path_and_info_list[idx]
+        img = Image.open(img_path)
+        if self.transform is not None:
+            img = self.transform(img)
+
+        return img, info
 
     @classmethod
     def _age_to_age_class(cls, age):

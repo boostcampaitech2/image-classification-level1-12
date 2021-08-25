@@ -1,6 +1,5 @@
 from torchvision import datasets, transforms
 from base import BaseDataLoader
-from PIL import Image
 
 
 class MnistDataLoader(BaseDataLoader):

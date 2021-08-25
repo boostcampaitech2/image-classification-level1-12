@@ -1,6 +1,8 @@
 import argparse
 import collections
 import torch
+from torch.utils.data import DataLoader
+from torchvision import transforms
 import numpy as np
 import data_loader.data_loaders as module_data
 import model.loss as module_loss
@@ -10,6 +12,10 @@ from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
 
+from data_loader.data_sets import MaskDataset
+from model.model import MaskModel
+from model.loss import MaskLoss
+
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -18,16 +24,47 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
 
+
 def main(config):
     logger = config.get_logger('train')
 
+    # define image transform
+    transform = transforms.Compose([
+        transforms.Scale(244),
+        transforms.CenterCrop(244),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+    ])
+
     # setup data_loader instances
-    data_loader = config.init_obj('data_loader', module_data)
-    valid_data_loader = data_loader.split_validation()
+    # data_loader = config.init_obj('data_loader', module_data)
+    # valid_data_loader = data_loader.split_validation()
+    train_dataset = MaskDataset("/opt/ml/mask_data",
+                                train=True,
+                                num_folds=5,
+                                folds=[0, 1, 2, 3]
+                                )
+    valid_dataset = MaskDataset("/opt/ml/mask_data",
+                                train=True,
+                                num_folds=5,
+                                folds=[4]
+                                )
+    train_data_loader = DataLoader(train_dataset,
+                                   batch_size=16,
+                                   shuffle=True,
+                                   num_workers=8)
+    valid_data_loader = DataLoader(valid_dataset,
+                                   batch_size=16,
+                                   shuffle=True,
+                                   num_workers=8)
+
+
 
     # build model architecture, then print to console
-    model = config.init_obj('arch', module_arch)
-    logger.info(model)
+    # model = config.init_obj('arch', module_arch)
+    # logger.info(model)
+    model = MaskModel
 
     # prepare for (multi-device) GPU training
     device, device_ids = prepare_device(config['n_gpu'])
@@ -36,7 +73,9 @@ def main(config):
         model = torch.nn.DataParallel(model, device_ids=device_ids)
 
     # get function handles of loss and metrics
-    criterion = getattr(module_loss, config['loss'])
+    # criterion = getattr(module_loss, config['loss'])
+    criterion = MaskLoss
+
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 
     # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler
@@ -47,7 +86,7 @@ def main(config):
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
                       device=device,
-                      data_loader=data_loader,
+                      data_loader=train_data_loader,
                       valid_data_loader=valid_data_loader,
                       lr_scheduler=lr_scheduler)
 
