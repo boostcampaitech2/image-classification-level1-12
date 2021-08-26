@@ -172,7 +172,10 @@ if __name__ == "__main__":
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=64,
+            # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
+            # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
+            drop_last=True,
             #  num_workers=2
         )
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
@@ -180,6 +183,7 @@ if __name__ == "__main__":
             val_dataset,
             batch_size=64,
             collate_fn=collate_fn,
+            drop_last=True,
             #  num_workers=2
         )
 

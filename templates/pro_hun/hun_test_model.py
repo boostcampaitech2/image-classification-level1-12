@@ -92,10 +92,6 @@ if __name__ == "__main__":
     all_predictions = [all_pre.argmax() for all_pre in all_predictions]
     submission["ans"] = all_predictions
 
-    import datetime as dt
-
-    from pytz import timezone
-
     # 제출할 파일을 저장합니다.
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
