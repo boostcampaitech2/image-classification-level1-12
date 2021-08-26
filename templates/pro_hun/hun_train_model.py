@@ -44,27 +44,27 @@ def resnet_finetune(model, classes):
     model = model(pretrained=True)
     # for params in model.parameters():
     #     params.requires_grad = False
-    # model.fc = nn.Linear(in_features=512, out_features=classes, bias=True)
-
-    # print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
-    # print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc.weight.shape[0])
-
-    # torch.nn.init.xavier_uniform_(model.fc.weight)
-    # stdv = 1.0 / math.sqrt(model.fc.weight.size(1))
-    # model.fc.bias.data.uniform_(-stdv, stdv)
-
-    model.fc = nn.Linear(in_features=2048, out_features=512, bias=True)
-    model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    model.relu = nn.ReLU(inplace=True)
-    model.dropout = nn.Dropout(p=0.2)
-    model.fc2= nn.Linear(in_features=512, out_features=classes, bias=True)
+    model.fc = nn.Linear(in_features=512, out_features=classes, bias=True)
 
     print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
-    print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc2.weight.shape[0])
+    print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc.weight.shape[0])
 
-    torch.nn.init.xavier_uniform_(model.fc2.weight)
-    stdv = 1.0 / math.sqrt(model.fc2.weight.size(1))
-    model.fc2.bias.data.uniform_(-stdv, stdv)
+    torch.nn.init.xavier_uniform_(model.fc.weight)
+    stdv = 1.0 / math.sqrt(model.fc.weight.size(1))
+    model.fc.bias.data.uniform_(-stdv, stdv)
+
+    # model.fc = nn.Linear(in_features=2048, out_features=512, bias=True)
+    # model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    # model.relu = nn.ReLU(inplace=True)
+    # model.dropout = nn.Dropout(p=0.2)
+    # model.fc2= nn.Linear(in_features=512, out_features=classes, bias=True)
+
+    # print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
+    # print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc2.weight.shape[0])
+
+    # torch.nn.init.xavier_uniform_(model.fc2.weight)
+    # stdv = 1.0 / math.sqrt(model.fc2.weight.size(1))
+    # model.fc2.bias.data.uniform_(-stdv, stdv)
 
     return model
 
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     st_time = time.time()
     for i in range(5):
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
-        mnist_resnet = resnet_finetune(resnet50, 18).to(device)  
+        mnist_resnet = resnet_finetune(resnet18, 18).to(device)  
 
         loss_fn = (
             torch.nn.CrossEntropyLoss()
@@ -171,7 +171,7 @@ if __name__ == "__main__":
         train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
-            batch_size=64,
+            batch_size=128,
             # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
-            batch_size=64,
+            batch_size=128,
             collate_fn=collate_fn,
             drop_last=True,
             #  num_workers=2
@@ -261,8 +261,8 @@ if __name__ == "__main__":
                         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
                         print(f"{epoch}번째 모델 저장!")
                         # early_ind = 0
-                    else:
-                        print(f"{epoch}번째 모델 pass")
+                #     else:
+                #         print(f"{epoch}번째 모델 pass")
                         # early_ind += 1
                         # if early_ind == 2:
                         #     flag = False
@@ -270,6 +270,7 @@ if __name__ == "__main__":
 
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
+    # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
     ed_time = time.time()
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
