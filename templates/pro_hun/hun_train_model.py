@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
 
     LEARNING_RATE = 0.0001  # 학습 때 사용하는 optimizer의 학습률 옵션 설정
-    NUM_EPOCH = 20  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
+    NUM_EPOCH = 10  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
 
 
     now = (
@@ -141,14 +141,14 @@ if __name__ == "__main__":
         train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
-            batch_size=128,
+            batch_size=256,
             collate_fn=collate_fn,
             #  num_workers=2
         )
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
-            batch_size=128,
+            batch_size=256,
             collate_fn=collate_fn,
             #  num_workers=2
         )
@@ -222,8 +222,10 @@ if __name__ == "__main__":
                     if pred_f1 <= epoch_f1:
                         pred_f1 = epoch_f1
                         torch.save(mnist_resnet18, os.path.join(dirname, f"model_mnist{i}.pickle"))
+                        print(f'{epoch}번째 모델 저장!')
                         early_ind = 0
                     else :
+                        print(f'{epoch}번째 모델 pass')
                         early_ind += 1 
                         if early_ind == 2 :
                             flag=False
