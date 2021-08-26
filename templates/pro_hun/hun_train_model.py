@@ -21,8 +21,8 @@ from torchvision import datasets, models, transforms
 from torchvision.models import resnet18
 from torchvision.transforms import Normalize, Resize, ToTensor
 
-from hun_kfold import Run_Split
 import notification
+from hun_kfold import Run_Split
 
 random_seed = 12
 torch.manual_seed(random_seed)
