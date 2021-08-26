@@ -6,13 +6,17 @@ import time
 from functools import partial
 from pathlib import Path
 
+import cv2
+import albumentations
+import albumentations.pytorch
+
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
-from torchvision.models.resnet import resnet152
+from torchvision.models.resnet import resnet152, resnet50
 from torchvision.transforms.transforms import RandomRotation
 import tqdm
 from PIL import Image
@@ -23,7 +27,7 @@ from torchvision import datasets, models, transforms
 from torchvision.models import resnet18
 from torchvision.transforms import Normalize, Resize, ToTensor
 
-# import notification
+import notification
 from hun_kfold import Run_Split
 
 random_seed = 12
@@ -82,15 +86,26 @@ class Mask_Dataset(object):
         )
         self.df = df
 
+
     def __getitem__(self, idx):
-        img_path = Path(self.df["path"][idx])
+        # img_path = Path(self.df["path"][idx])
+        img_path = self.df["path"][idx]
         target = self.df["label"][idx]
-        img = Image.open(img_path).convert("RGB")
-
+        
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        
         if self.transforms is not None:
-            img = self.transforms(img)
+            augmented = self.transforms(image = img)
+            img = augmented['image']
 
+        # img = Image.open(img_path).convert("RGB")
+
+        # if self.transforms is not None:
+        #     img = self.transforms(img)
+                
         return img, target
+        
 
     def __len__(self):
         return len(self.imgs)
@@ -102,19 +117,31 @@ if __name__ == "__main__":
     run_split = Run_Split(os.path.join(train_path, "image_all"))
     train_list, val_list = run_split.train_val_split(train_label)
 
+
     device = torch.device(
         "cuda:0" if torch.cuda.is_available() else "cpu"
     )  # 학습 때 GPU 사용여부 결정. Colab에서는 "런타임"->"런타임 유형 변경"에서 "GPU"를 선택할 수 있음
     print(f"{device} is using!")
 
-    data_transform = transforms.Compose(
-        [
-            Resize((512, 384), Image.BILINEAR),
-            ToTensor(),
-            Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
-            # RandomRotation([-8, +8])
-        ]
-    )
+
+    data_transform = albumentations.Compose([
+        albumentations.Resize(512, 384, cv2.INTER_LINEAR),
+        albumentations.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+        albumentations.pytorch.transforms.ToTensorV2(),
+        # albumentations.RandomCrop(224, 224),
+        # albumentations.RamdomCrop, CenterCrop, RandomRotation
+        # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
+    ])
+
+
+    # data_transform = transforms.Compose(
+    #     [
+    #         Resize((512, 384), Image.BILINEAR),
+    #         ToTensor(),
+    #         Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+    #         # RandomRotation([-8, +8])
+    #     ]
+    # )
 
     LEARNING_RATE = 0.0001  # 학습 때 사용하는 optimizer의 학습률 옵션 설정
     NUM_EPOCH = 10  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
@@ -131,9 +158,8 @@ if __name__ == "__main__":
     dirname.mkdir(parents=True, exist_ok=False)
     st_time = time.time()
     for i in range(5):
-        mnist_resnet = resnet_finetune(resnet152, 18).to(
-            device
-        )  # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
+        # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
+        mnist_resnet = resnet_finetune(resnet50, 18).to(device)  
 
         loss_fn = (
             torch.nn.CrossEntropyLoss()
@@ -145,14 +171,14 @@ if __name__ == "__main__":
         train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
-            batch_size=32,
+            batch_size=64,
             collate_fn=collate_fn,
             #  num_workers=2
         )
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
-            batch_size=32,
+            batch_size=64,
             collate_fn=collate_fn,
             #  num_workers=2
         )
@@ -163,15 +189,15 @@ if __name__ == "__main__":
         best_test_accuracy = 0.0
         best_test_loss = 9999.0
 
-        flag = True
-        early_ind = 0
+        # flag = True
+        # early_ind = 0
         pred_f1 = 0.0
         for epoch in range(NUM_EPOCH):
             epoch_f1 = 0
             n_iter = 0
 
-            if not (flag):
-                break
+            # if not (flag):
+            #     break
             for phase in ["train", "test"]:
                 running_loss = 0.0
                 running_acc = 0.0
@@ -228,22 +254,19 @@ if __name__ == "__main__":
                 if phase == "test":
                     if pred_f1 <= epoch_f1:
                         pred_f1 = epoch_f1
-                        torch.save(
-                            mnist_resnet,
-                            os.path.join(dirname, f"model_mnist{i}.pickle"),
-                        )
+                        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
                         print(f"{epoch}번째 모델 저장!")
-                        early_ind = 0
+                        # early_ind = 0
                     else:
                         print(f"{epoch}번째 모델 pass")
-                        early_ind += 1
-                        if early_ind == 2:
-                            flag = False
-                            break
+                        # early_ind += 1
+                        # if early_ind == 2:
+                        #     flag = False
+                        #     break
 
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
     ed_time = time.time()
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
-    # notification
+    notification
