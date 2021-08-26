@@ -7,14 +7,14 @@ import tqdm
 
 
 class Make_Label:
-    def __init__(self, BASE_PATH:str, CSV_FILE:pd.DataFrame, COLS:list):
+    def __init__(self, BASE_PATH: str, CSV_FILE: pd.DataFrame, COLS: list):
         """
         기존의 train.csv 파일에 labeling을 새로 해주기 위해 경로 설정
         Args:
             BASE_PATH (str): train.csv File path
             CSV_FILE (pd.DataFrame): train.csv
             COLS (list): 새로 만들 DataFrame의 COLUMN
-        """        
+        """
         self.path = BASE_PATH
         self.img_path = os.path.join(BASE_PATH, "images")
         self.csv_file = CSV_FILE
@@ -24,9 +24,7 @@ class Make_Label:
         idx_df = 0
         # 이미지 폴더 path
         for idx in tqdm.tqdm(range(train_df.shape[0])):
-            IMG_PATH = os.path.join(
-                self.img_path, train_df.iloc[idx]["path"]
-            )
+            IMG_PATH = os.path.join(self.img_path, train_df.iloc[idx]["path"])
             file_list = os.listdir(IMG_PATH)
 
             for file in file_list:

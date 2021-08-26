@@ -19,13 +19,13 @@ class Run_Split:
 
     def image_all(self, df: pd.DataFrame, df_name: str):
         """
-		train dataset을 train, val에 맞춰서 폴더 재생성
+        train dataset을 train, val에 맞춰서 폴더 재생성
 
-		Args:
-		dirname (str): '/opt/ml/image-classification-level1-12/templates/data/train/image_all'
-		df (pd.DataFrame): train_df와 val_df
-		df_name (str): 입력된 df에 맞춰서 입력
-		"""
+        Args:
+        dirname (str): '/opt/ml/image-classification-level1-12/templates/data/train/image_all'
+        df (pd.DataFrame): train_df와 val_df
+        df_name (str): 입력된 df에 맞춰서 입력
+        """
         dirname = Path(os.path.join(self.dirname, df_name))
         if not dirname.is_dir():
             dirname.mkdir(parents=True, exist_ok=False)
@@ -41,8 +41,12 @@ class Run_Split:
         y = train_label["label"]
 
         for idx, (train_idx, val_idx) in enumerate(KFold.split(X, y)):
-            globals()[f"train_df{idx}"] = train_label[train_label.index.isin(X[train_idx])].reset_index(drop=True)
-            globals()[f"val_df{idx}"] = train_label[train_label.index.isin(X[val_idx])].reset_index(drop=True)
+            globals()[f"train_df{idx}"] = train_label[
+                train_label.index.isin(X[train_idx])
+            ].reset_index(drop=True)
+            globals()[f"val_df{idx}"] = train_label[
+                train_label.index.isin(X[val_idx])
+            ].reset_index(drop=True)
 
         train_list = [train_df0, train_df1, train_df2, train_df3, train_df4]
         val_list = [val_df0, val_df1, val_df2, val_df3, val_df4]

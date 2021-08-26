@@ -85,14 +85,22 @@ if __name__ == "__main__":
                 ed_time = time.time()
                 use_time = round(ed_time - st_time, 2)
                 remian_time = round((use_time / idx) * (len(loader) - idx), 2)
-                print(f"\r{moli} 걸린 시간 : {use_time:10s}, \t남은 시간: {remian_time}", end="")
+                print(
+                    f"\r{moli} 걸린 시간 : {use_time:10s}, \t남은 시간: {remian_time}", end=""
+                )
 
     all_predictions = [all_pre.argmax() for all_pre in all_predictions]
     submission["ans"] = all_predictions
 
     from pytz import timezone
     import datetime as dt
+
     # 제출할 파일을 저장합니다.
-    now = (dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S"))
-    submission.to_csv(f"/opt/ml/image-classification-level1-12/templates/pro_hun/output/sub/sub_{now}.csv", index=False)
+    now = (
+        dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
+    )
+    submission.to_csv(
+        f"/opt/ml/image-classification-level1-12/templates/pro_hun/output/sub/sub_{now}.csv",
+        index=False,
+    )
     print("test inference is done!")

@@ -39,14 +39,14 @@ def resnet_finetune(model, classes):
     # for params in model.parameters():
     #     params.requires_grad = False
     model.fc = nn.Linear(in_features=512, out_features=classes, bias=True)
-    
+
     print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
     print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc.weight.shape[0])
 
     torch.nn.init.xavier_uniform_(model.fc.weight)
     stdv = 1.0 / math.sqrt(model.fc.weight.size(1))
     model.fc.bias.data.uniform_(-stdv, stdv)
-    
+
     # model.fc = nn.Linear(in_features=512, out_features=128, bias=True)
     # model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
     # model.relu = nn.ReLU(inplace=True)
@@ -112,24 +112,24 @@ if __name__ == "__main__":
         ]
     )
 
-
     LEARNING_RATE = 0.0001  # 학습 때 사용하는 optimizer의 학습률 옵션 설정
     NUM_EPOCH = 10  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
-
 
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
     )
     dirname = Path(
         os.path.join(
-            "/opt/ml/image-classification-level1-12/templates/pro_hun/output/model", f"model_{now}"
+            "/opt/ml/image-classification-level1-12/templates/pro_hun/output/model",
+            f"model_{now}",
         )
     )
     dirname.mkdir(parents=True, exist_ok=False)
     st_time = time.time()
     for i in range(5):
-        mnist_resnet18 = resnet_finetune(resnet18, 18).to(device) # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
-
+        mnist_resnet18 = resnet_finetune(resnet18, 18).to(
+            device
+        )  # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
 
         loss_fn = (
             torch.nn.CrossEntropyLoss()
@@ -158,15 +158,16 @@ if __name__ == "__main__":
         ### 학습 코드 시작
         best_test_accuracy = 0.0
         best_test_loss = 9999.0
-    
+
         flag = True
         early_ind = 0
-        pred_f1 = 0.0    
+        pred_f1 = 0.0
         for epoch in range(NUM_EPOCH):
             epoch_f1 = 0
             n_iter = 0
 
-            if not (flag) : break
+            if not (flag):
+                break
             for phase in ["train", "test"]:
                 running_loss = 0.0
                 running_acc = 0.0
@@ -175,7 +176,9 @@ if __name__ == "__main__":
                 elif phase == "test":
                     mnist_resnet18.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
 
-                for ind, (images, labels) in enumerate(tqdm.tqdm(dataloaders[phase], leave=False)):
+                for ind, (images, labels) in enumerate(
+                    tqdm.tqdm(dataloaders[phase], leave=False)
+                ):
                     images = torch.stack(list(images), dim=0).to(device)
                     labels = torch.tensor(list(labels)).to(device)
 
@@ -218,22 +221,25 @@ if __name__ == "__main__":
                     phase == "test" and best_test_loss > epoch_loss
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
-                if (phase=='test') :
+                if phase == "test":
                     if pred_f1 <= epoch_f1:
                         pred_f1 = epoch_f1
-                        torch.save(mnist_resnet18, os.path.join(dirname, f"model_mnist{i}.pickle"))
-                        print(f'{epoch}번째 모델 저장!')
+                        torch.save(
+                            mnist_resnet18,
+                            os.path.join(dirname, f"model_mnist{i}.pickle"),
+                        )
+                        print(f"{epoch}번째 모델 저장!")
                         early_ind = 0
-                    else :
-                        print(f'{epoch}번째 모델 pass')
-                        early_ind += 1 
-                        if early_ind == 2 :
-                            flag=False
+                    else:
+                        print(f"{epoch}번째 모델 pass")
+                        early_ind += 1
+                        if early_ind == 2:
+                            flag = False
                             break
 
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
     ed_time = time.time()
-    total_minute = (round(ed_time-st_time, 2))//60
-    print(f'총 학습 시간 : {total_minute}분 소요되었습니다.')
+    total_minute = (round(ed_time - st_time, 2)) // 60
+    print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
     notification()
