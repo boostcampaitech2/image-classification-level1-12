@@ -3,6 +3,10 @@ import os
 import random
 import time
 
+import cv2
+import albumentations
+import albumentations.pytorch
+
 import numpy as np
 import pandas as pd
 import torch
@@ -30,11 +34,18 @@ class TestDataset(Dataset):
         self.transform = transform
 
     def __getitem__(self, index):
+
+        # img = Image.open(img_path).convert("RGB")
+        # image = cv2.imread(self.img_paths[index])
+        # if self.transform is not None:
+        #     augmented = self.transform(image = image)
+        #     img = augmented['image']
         image = Image.open(self.img_paths[index])
 
         if self.transform:
             image = self.transform(image)
         return image
+
 
     def __len__(self):
         return len(self.img_paths)
@@ -51,6 +62,7 @@ if __name__ == "__main__":
 
     # Test Dataset 클래스 객체를 생성하고 DataLoader를 만듭니다.
     image_paths = [os.path.join(image_dir, img_id) for img_id in submission.ImageID]
+
     transform = transforms.Compose(
         [
             Resize((512, 384), Image.BILINEAR),
@@ -58,6 +70,17 @@ if __name__ == "__main__":
             Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
         ]
     )
+
+    # transform = albumentations.Compose([
+	# 	albumentations.Resize(512, 384, cv2.INTER_LINEAR),
+	# 	albumentations.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+	# 	albumentations.pytorch.transforms.ToTensorV2(),
+	# 	# albumentations.RandomCrop(224, 224),
+	# 	# albumentations.RamdomCrop, CenterCrop, RandomRotation
+	# 	# albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
+	# ])
+
+
     dataset = TestDataset(image_paths, transform)
     loader = DataLoader(dataset, shuffle=False, num_workers=2)
 

@@ -56,7 +56,7 @@ class TestDataset(Dataset):
 
 if __name__ == "__main__":
 	model = torch.load(
-		"/opt/ml/image-classification-level1-12/templates/pro_hun/output/model/model_2021-08-26_142058/model_mnist0.pickle"
+		"/opt/ml/image-classification-level1-12/templates/pro_hun/output/model/model_2021-08-26_223157/model_mnist0.pickle"
 	)
 	model.eval()
 
@@ -77,6 +77,7 @@ if __name__ == "__main__":
 	transform = albumentations.Compose([
 		albumentations.Resize(512, 384, cv2.INTER_LINEAR),
 		albumentations.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+		
 		albumentations.pytorch.transforms.ToTensorV2(),
 		# albumentations.RandomCrop(224, 224),
 		# albumentations.RamdomCrop, CenterCrop, RandomRotation

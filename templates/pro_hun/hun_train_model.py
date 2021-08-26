@@ -92,17 +92,17 @@ class Mask_Dataset(object):
         img_path = self.df["path"][idx]
         target = self.df["label"][idx]
         
-        img = cv2.imread(img_path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = cv2.imread(img_path)
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
-        if self.transforms is not None:
-            augmented = self.transforms(image = img)
-            img = augmented['image']
-
-        # img = Image.open(img_path).convert("RGB")
-
         # if self.transforms is not None:
-        #     img = self.transforms(img)
+        #     augmented = self.transforms(image = img)
+        #     img = augmented['image']
+
+        img = Image.open(img_path).convert("RGB")
+
+        if self.transforms is not None:
+            img = self.transforms(img)
                 
         return img, target
         
@@ -124,24 +124,28 @@ if __name__ == "__main__":
     print(f"{device} is using!")
 
 
-    data_transform = albumentations.Compose([
-        albumentations.Resize(512, 384, cv2.INTER_LINEAR),
-        albumentations.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
-        albumentations.pytorch.transforms.ToTensorV2(),
-        # albumentations.RandomCrop(224, 224),
-        # albumentations.RamdomCrop, CenterCrop, RandomRotation
-        # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
-    ])
+    # data_transform = albumentations.Compose([
+    #     albumentations.Resize(512, 384, cv2.INTER_LINEAR),
+    #     albumentations.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+    #     albumentations.OneOf([
+	# 		albumentations.HorizontalFlip(p=1),
+	# 		albumentations.Rotate([-10, 10], p=1),
+    #     ], p=0.5),
+    #     albumentations.pytorch.transforms.ToTensorV2(),
+    #     # albumentations.RandomCrop(224, 224),
+    #     # albumentations.RamdomCrop, CenterCrop, RandomRotation
+    #     # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
+    # ])
 
 
-    # data_transform = transforms.Compose(
-    #     [
-    #         Resize((512, 384), Image.BILINEAR),
-    #         ToTensor(),
-    #         Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
-    #         # RandomRotation([-8, +8])
-    #     ]
-    # )
+    data_transform = transforms.Compose(
+        [
+            Resize((512, 384), Image.BILINEAR),
+            ToTensor(),
+            Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+            # RandomRotation([-8, +8])
+        ]
+    )
 
     LEARNING_RATE = 0.0001  # 학습 때 사용하는 optimizer의 학습률 옵션 설정
     NUM_EPOCH = 10  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
@@ -175,7 +179,7 @@ if __name__ == "__main__":
             # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
-            drop_last=True,
+            # drop_last=True,
             #  num_workers=2
         )
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
@@ -183,7 +187,7 @@ if __name__ == "__main__":
             val_dataset,
             batch_size=128,
             collate_fn=collate_fn,
-            drop_last=True,
+            # drop_last=True,
             #  num_workers=2
         )
 
@@ -255,11 +259,11 @@ if __name__ == "__main__":
                     phase == "test" and best_test_loss > epoch_loss
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
-                if phase == "test":
-                    if pred_f1 <= epoch_f1:
-                        pred_f1 = epoch_f1
-                        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
-                        print(f"{epoch}번째 모델 저장!")
+                # if phase == "test":
+                #     if pred_f1 <= epoch_f1:
+                #         pred_f1 = epoch_f1
+                        
+                #         print(f"{epoch}번째 모델 저장!")
                         # early_ind = 0
                 #     else:
                 #         print(f"{epoch}번째 모델 pass")
@@ -267,7 +271,7 @@ if __name__ == "__main__":
                         # if early_ind == 2:
                         #     flag = False
                         #     break
-
+        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
     # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
