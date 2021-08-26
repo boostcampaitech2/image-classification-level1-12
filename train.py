@@ -30,10 +30,17 @@ def main(config):
     logger = config.get_logger('train')
 
     # define image transform
-    transform = transforms.Compose([
+    train_transform = transforms.Compose([
         # transforms.Scale(244),
         transforms.CenterCrop(244),
         transforms.RandomHorizontalFlip(p=0.5),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+    ])
+    valid_transform = transforms.Compose([
+        # transforms.Scale(244),
+        transforms.CenterCrop(244),
+        # transforms.RandomHorizontalFlip(p=0.5),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
@@ -45,13 +52,13 @@ def main(config):
                                 train=True,
                                 num_folds=5,
                                 folds=[0, 1, 2, 3],
-                                transform=transform
+                                transform=train_transform
                                 )
     valid_dataset = MaskDataset("/opt/ml/mask_data",
                                 train=True,
                                 num_folds=5,
                                 folds=[4],
-                                transform=transform
+                                transform=valid_transform
                                 )
     train_data_loader = DataLoader(train_dataset,
                                    batch_size=64,
@@ -81,7 +88,14 @@ def main(config):
     # get function handles of loss and metrics
     # criterion = getattr(module_loss, config['loss'])
     # criterion = mask_total_loss
-    criterion = MaskLoss()
+    mask_weight = None
+    gender_weight = None
+    age_weight = torch.tensor([1.4, 1., 6.1]).to(device)
+    criterion = MaskLoss(
+                    mask_weight=mask_weight,
+                    gender_weight=gender_weight,
+                    age_weight=age_weight
+                )
 
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 
