@@ -86,7 +86,7 @@ if __name__ == "__main__":
                 use_time = round(ed_time - st_time, 2)
                 remian_time = round((use_time / idx) * (len(loader) - idx), 2)
                 print(
-                    f"\r{moli} 걸린 시간 : {use_time:10s}, \t남은 시간: {remian_time}", end=""
+                    f"\r{moli} 걸린 시간 : {use_time:10}, \t남은 시간: {remian_time}", end=""
                 )
 
     all_predictions = [all_pre.argmax() for all_pre in all_predictions]
