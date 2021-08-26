@@ -4,6 +4,7 @@ import sys
 
 import requests
 
+
 if __name__ == "__main__":
     url = "https://hooks.slack.com/services/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"  # 웹후크 URL 입력
     message = "학습이 완료되었습니다!!!"  # 메세지 입력
