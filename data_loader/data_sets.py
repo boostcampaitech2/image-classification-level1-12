@@ -71,29 +71,31 @@ class MaskDataset(VisionDataset):
                     self.selected_data.extend(class_data[start_idx:end_idx])
             random.shuffle(self.selected_data)
         else:
-            # read csv and shuffle
-            np.random.seed(self.random_seed)
-            self.selected_data = pd.read_csv(os.path.join(root + "/eval/info.csv"))
-            self.selected_data = self.selected_data.sample(frac=1).reset_index(drop=True)
+            # read csv
+            self.selected_data = \
+                [meta_row for _, meta_row in pd.read_csv(os.path.join(root + "/eval/info.csv")).iterrows()]
+            # DO NOT shuffle eval data
+            # np.random.seed(self.random_seed)
+            # self.selected_data = self.selected_data.sample(frac=1).reset_index(drop=True)
 
         # make the full paths of images and save them with target infos to the list
         self.image_path_and_info_list = list()
         for a_data in self.selected_data:
-            if not train:
-                image_path = os.path.join(root + "/eval/" + a_data["ImageID"] + ".jpg")
-                info = None
+            if self.train:
+                train_infos_except_mask = \
+                    {key: value for key, value in a_data.items() if key in ["id", "gender", "age", "race"]}
+
+                for image_type in self.TRAIN_IMAGE_TYPES:
+                    image_path = os.path.join(root + "/train/images/" + a_data["path"] + "/" + image_type)
+
+                    train_info = deepcopy(train_infos_except_mask)
+                    train_info["mask"] = self._mask_to_mask_class(image_type)
+
+                    self.image_path_and_info_list.append((image_path, train_info))
+            else:
+                image_path = os.path.join(root + "/eval/images/" + a_data["ImageID"])
+                info = a_data["ans"]
                 self.image_path_and_info_list.append((image_path, info))
-
-            train_infos_except_mask = \
-                {key: value for key, value in a_data.items() if key in ["id", "gender", "age", "race"]}
-
-            for image_type in self.TRAIN_IMAGE_TYPES:
-                image_path = os.path.join(root + "/train/images/" + a_data["path"] + "/" + image_type)
-
-                train_info = deepcopy(train_infos_except_mask)
-                train_info["mask"] = self._mask_to_mask_class(image_type)
-
-                self.image_path_and_info_list.append((image_path, train_info))
 
     def __len__(self):
         return len(self.image_path_and_info_list)
@@ -106,37 +108,43 @@ class MaskDataset(VisionDataset):
         if train
             image path
                 /opt/ml/mask_data/train/images/001726_male_Asian_26/mask3.jpg
-            info
-                {
-                    "id": "001726",
-                    "gender": 0,  # GENDERS = ("male", "female")
-                    "age": 1  # AGE_CLASSES = ("<=18", ">=19 and <=59", ">=60"),
-                    "race": "Asain"
-                    "mask": 0  # MASK_CLASSES = ("mask", "incorrect_mask", "normal")
-                }
+            target
+                (
+                    0  # MASK_CLASSES = ("mask", "incorrect_mask", "normal")
+                    0,  # GENDERS = ("male", "female")
+                    1  # AGE_CLASSES = ("<30", ">=30 and <60", ">=60"),
+                )
         if not train (eval)
             image path
                 /opt/ml/mask_data/eval/images/9da5ae3d63373e1e44e9a323d17779f2b661e50d (file extension is not included)
             info
-                None
+                0
         """
         img_path, info = self.image_path_and_info_list[idx]
 
+        # load and transform image
         img = None
-        for image_file_extension in self.IMAGE_FILE_EXTENSION:
-            try:
-                img = Image.open(img_path + image_file_extension)
-                break
-            except FileNotFoundError:
-                continue
+        if self.train:
+            for image_file_extension in self.IMAGE_FILE_EXTENSION:
+                try:
+                    img = Image.open(img_path + image_file_extension)
+                    break
+                except FileNotFoundError:
+                    continue
+        else:
+            img = Image.open(img_path)
+
         if not img:
             raise FileNotFoundError(f'No such file: {img_path}{" or ".join(self.IMAGE_FILE_EXTENSION)}')
 
-        # img = np.array(img)
-
         if self.transform is not None:
             img = self.transform(img)
-        target = (info["mask"], info["gender"], info["age"])
+
+        # target
+        if self.train:
+            target = (info["mask"], info["gender"], info["age"])
+        else:
+            target = info
 
         return img, target
 

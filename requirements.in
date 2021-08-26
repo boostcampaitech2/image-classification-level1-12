@@ -3,5 +3,5 @@ torchvision==0.8.2
 torchelastic==0.2.1
 numpy==1.19.2
 pandas==1.1.5
-#tqdm
+tqdm==4.51.0
 #tensorboard>=1.14
