@@ -165,7 +165,7 @@ if __name__ == "__main__":
         mnist_resnet.parameters(), lr=LEARNING_RATE
     )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
 
-    train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
+    train_dataset = Mask_Dataset(data_transform, f"train{2}", train_list[2])
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=64,
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         drop_last=True,
         #  num_workers=2
     )
-    val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
+    val_dataset = Mask_Dataset(data_transform, f"val{2}", val_list[2])
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=64,
@@ -256,7 +256,7 @@ if __name__ == "__main__":
                 if pred_f1 <= epoch_f1:
                     pred_f1 = epoch_f1
                     torch.save(
-                        mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle")
+                        mnist_resnet, os.path.join(dirname, f"model_mnist{2}.pickle")
                     )
                     print(f"{epoch}번째 모델 저장!")
                     early_ind = 0
