@@ -12,6 +12,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
+from torchvision.models.resnet import resnet152
+from torchvision.transforms.transforms import RandomRotation
 import tqdm
 from PIL import Image
 from pytz import timezone
@@ -21,7 +23,7 @@ from torchvision import datasets, models, transforms
 from torchvision.models import resnet18
 from torchvision.transforms import Normalize, Resize, ToTensor
 
-import notification
+# import notification
 from hun_kfold import Run_Split
 
 random_seed = 12
@@ -38,26 +40,27 @@ def resnet_finetune(model, classes):
     model = model(pretrained=True)
     # for params in model.parameters():
     #     params.requires_grad = False
-    model.fc = nn.Linear(in_features=512, out_features=classes, bias=True)
-
-    print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
-    print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc.weight.shape[0])
-
-    torch.nn.init.xavier_uniform_(model.fc.weight)
-    stdv = 1.0 / math.sqrt(model.fc.weight.size(1))
-    model.fc.bias.data.uniform_(-stdv, stdv)
-
-    # model.fc = nn.Linear(in_features=512, out_features=128, bias=True)
-    # model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    # model.relu = nn.ReLU(inplace=True)
-    # model.fc2= nn.Linear(in_features=128, out_features=classes, bias=True)
+    # model.fc = nn.Linear(in_features=512, out_features=classes, bias=True)
 
     # print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
-    # print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc2.weight.shape[0])
+    # print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc.weight.shape[0])
 
-    # torch.nn.init.xavier_uniform_(model.fc2.weight)
-    # stdv = 1.0 / math.sqrt(model.fc2.weight.size(1))
-    # model.fc2.bias.data.uniform_(-stdv, stdv)
+    # torch.nn.init.xavier_uniform_(model.fc.weight)
+    # stdv = 1.0 / math.sqrt(model.fc.weight.size(1))
+    # model.fc.bias.data.uniform_(-stdv, stdv)
+
+    model.fc = nn.Linear(in_features=2048, out_features=512, bias=True)
+    model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    model.relu = nn.ReLU(inplace=True)
+    model.dropout = nn.Dropout(p=0.2)
+    model.fc2= nn.Linear(in_features=512, out_features=classes, bias=True)
+
+    print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
+    print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc2.weight.shape[0])
+
+    torch.nn.init.xavier_uniform_(model.fc2.weight)
+    stdv = 1.0 / math.sqrt(model.fc2.weight.size(1))
+    model.fc2.bias.data.uniform_(-stdv, stdv)
 
     return model
 
@@ -109,6 +112,7 @@ if __name__ == "__main__":
             Resize((512, 384), Image.BILINEAR),
             ToTensor(),
             Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+            # RandomRotation([-8, +8])
         ]
     )
 
@@ -127,7 +131,7 @@ if __name__ == "__main__":
     dirname.mkdir(parents=True, exist_ok=False)
     st_time = time.time()
     for i in range(5):
-        mnist_resnet18 = resnet_finetune(resnet18, 18).to(
+        mnist_resnet = resnet_finetune(resnet152, 18).to(
             device
         )  # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
 
@@ -135,20 +139,20 @@ if __name__ == "__main__":
             torch.nn.CrossEntropyLoss()
         )  # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
         optimizer = torch.optim.Adam(
-            mnist_resnet18.parameters(), lr=LEARNING_RATE
+            mnist_resnet.parameters(), lr=LEARNING_RATE
         )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
 
         train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
-            batch_size=256,
+            batch_size=32,
             collate_fn=collate_fn,
             #  num_workers=2
         )
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
-            batch_size=256,
+            batch_size=32,
             collate_fn=collate_fn,
             #  num_workers=2
         )
@@ -172,9 +176,9 @@ if __name__ == "__main__":
                 running_loss = 0.0
                 running_acc = 0.0
                 if phase == "train":
-                    mnist_resnet18.train()  # 네트워크 모델을 train 모드로 두어 gradient을 계산하고, 여러 sub module (배치 정규화, 드롭아웃 등)이 train mode로 작동할 수 있도록 함
+                    mnist_resnet.train()  # 네트워크 모델을 train 모드로 두어 gradient을 계산하고, 여러 sub module (배치 정규화, 드롭아웃 등)이 train mode로 작동할 수 있도록 함
                 elif phase == "test":
-                    mnist_resnet18.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
+                    mnist_resnet.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
 
                 for ind, (images, labels) in enumerate(
                     tqdm.tqdm(dataloaders[phase], leave=False)
@@ -187,7 +191,7 @@ if __name__ == "__main__":
                     with torch.set_grad_enabled(
                         phase == "train"
                     ):  # train 모드일 시에는 gradient를 계산하고, 아닐 때는 gradient를 계산하지 않아 연산량 최소화
-                        logits = mnist_resnet18(images)
+                        logits = mnist_resnet(images)
                         _, preds = torch.max(
                             logits, 1
                         )  # 모델에서 linear 값으로 나오는 예측 값 ([0.9,1.2, 3.2,0.1,-0.1,...])을 최대 output index를 찾아 예측 레이블([2])로 변경함
@@ -225,7 +229,7 @@ if __name__ == "__main__":
                     if pred_f1 <= epoch_f1:
                         pred_f1 = epoch_f1
                         torch.save(
-                            mnist_resnet18,
+                            mnist_resnet,
                             os.path.join(dirname, f"model_mnist{i}.pickle"),
                         )
                         print(f"{epoch}번째 모델 저장!")
@@ -242,4 +246,4 @@ if __name__ == "__main__":
     ed_time = time.time()
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
-    notification()
+    # notification
