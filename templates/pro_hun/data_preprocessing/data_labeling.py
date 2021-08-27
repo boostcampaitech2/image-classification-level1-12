@@ -1,7 +1,4 @@
 import os
-import shutil
-from pathlib import Path
-
 import pandas as pd
 import tqdm
 
@@ -86,12 +83,12 @@ if __name__ == "__main__":
 
     # df['error_check'] = df['name'].map(lambda x : 1
     #             if ('006359' in x or '006360' in x or '006361' in x or '006362' in x or '006363' in x or '006364' in x)
-    #             else (2 if ('001498-1' in x or '004432' in x) 
+    #             else (2 if ('001498-1' in x or '004432' in x)
     #             else (3 if ('000020' in x or '004418' in x or '005227' in x) and ('incorrect'  in x or 'normal'in x) else 0)))
 
-    # df['label'] = df.apply(lambda x: x['label']-3 if x['error_check']==1 
-    #                             else (x['label']+3 if x['error_check']==2 
-    #                             else (x['label']+6 if (x['error_check']==3 and 'incorrect' in x['name']) 
+    # df['label'] = df.apply(lambda x: x['label']-3 if x['error_check']==1
+    #                             else (x['label']+3 if x['error_check']==2
+    #                             else (x['label']+6 if (x['error_check']==3 and 'incorrect' in x['name'])
     #                             else (x['label']-6 if (x['error_check']==3 and 'normal' in x['name']) else x['label']))), axis=1)
 
     # df.drop(columns=['error_check'], inplace=True)
