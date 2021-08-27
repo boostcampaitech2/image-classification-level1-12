@@ -40,16 +40,20 @@ class Run_Split:
         X = train_label.index
         y = train_label["label"]
 
-        for idx, (train_idx, val_idx) in enumerate(KFold.split(X, y)):
-            globals()[f"train_df{idx}"] = train_label[
-                train_label.index.isin(X[train_idx])
-            ].reset_index(drop=True)
-            globals()[f"val_df{idx}"] = train_label[
-                train_label.index.isin(X[val_idx])
-            ].reset_index(drop=True)
+        train_list, val_list = [], []
 
-        train_list = [train_df0, train_df1, train_df2, train_df3, train_df4]
-        val_list = [val_df0, val_df1, val_df2, val_df3, val_df4]
+        for idx, (train_idx, val_idx) in enumerate(KFold.split(X, y)):
+            train_list.append(train_label[train_label.index.isin(X[train_idx])].reset_index(drop=True))
+            val_list.append(train_label[train_label.index.isin(X[train_idx])].reset_index(drop=True))
+            # globals()[f"train_df{idx}"] = train_label[
+            #     train_label.index.isin(X[train_idx])
+            # ].reset_index(drop=True)
+            # globals()[f"val_df{idx}"] = train_label[
+            #     train_label.index.isin(X[val_idx])
+            # ].reset_index(drop=True)
+
+        # train_list = [train_df0, train_df1, train_df2, train_df3, train_df4]
+        # val_list = [val_df0, val_df1, val_df2, val_df3, val_df4]
 
         return train_list, val_list
 
