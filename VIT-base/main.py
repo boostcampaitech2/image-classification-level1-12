@@ -21,8 +21,8 @@ if __name__ == '__main__':
     lr = 1e-5
     cv_num = 3
     freeze = False
-    debug = True
-    addition = 'to_layer_one'
+    debug = False
+    addition = 'VIT'
 
     print(f'\nDEBUG: {debug}')
     print(f'estimated end time: {datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))) + datetime.timedelta(minutes=10*(epoch*cv_num + 1) + 3)}')

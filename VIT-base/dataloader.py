@@ -108,3 +108,37 @@ def sub_collate_fn(batch):
         img_list.append(transform(PIL.Image.open(dir)))
     
     return torch.stack(img_list, dim=0)
+
+
+class AgeDataset(Dataset):
+    def __init__(self, dir_list: list, label_list: list, shuffle=True):
+        self.dir_list = dir_list
+        self.label = label_list
+
+        if shuffle == True:
+            print('shuffle mode')
+
+
+    def __len__(self):
+        return len(self.dir_list)
+
+
+    def __getitem__(self, index):
+        return self.dir_list[index], self.label[index]
+
+
+
+class AgeDataLoader(DataLoader):
+    def __init__(self, dataset, batch_size, num_workers=1, collate_fn = None):
+        
+        self.length = len(dataset)
+        self.init_kwargs = {
+            'dataset': dataset,
+            'batch_size': batch_size,
+            'collate_fn': collate_fn,
+            'num_workers': num_workers
+        }
+        super().__init__(**self.init_kwargs)
+
+    def __len__(self):
+        return self.length
