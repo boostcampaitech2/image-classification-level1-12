@@ -86,6 +86,8 @@ class Mask_Dataset(object):
         )
         self.df = df
 
+        
+
 
     def __getitem__(self, idx):
         # img_path = Path(self.df["path"][idx])
@@ -143,7 +145,8 @@ if __name__ == "__main__":
             Resize((512, 384), Image.BILINEAR),
             ToTensor(),
             Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
-            # RandomRotation([-8, +8])
+            GaussianBlur(sigma=(0, 3.0)),
+            RandomRotation([-8, +8]),
         ]
     )
 
@@ -199,7 +202,7 @@ if __name__ == "__main__":
 
         # flag = True
         # early_ind = 0
-        pred_f1 = 0.0
+        # pred_f1 = 0.0
         for epoch in range(NUM_EPOCH):
             epoch_f1 = 0
             n_iter = 0
@@ -262,9 +265,9 @@ if __name__ == "__main__":
                 # if phase == "test":
                 #     if pred_f1 <= epoch_f1:
                 #         pred_f1 = epoch_f1
-                        
+                #         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
                 #         print(f"{epoch}번째 모델 저장!")
-                        # early_ind = 0
+                #         early_ind = 0
                 #     else:
                 #         print(f"{epoch}번째 모델 pass")
                         # early_ind += 1
