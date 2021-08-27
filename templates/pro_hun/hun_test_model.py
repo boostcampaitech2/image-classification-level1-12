@@ -18,6 +18,8 @@ from torchvision import transforms
 from torchvision.transforms import Normalize, Resize, ToTensor
 from tqdm.notebook import tqdm
 
+from utils.util import prepare_device
+
 random_seed = 12
 torch.manual_seed(random_seed)
 torch.cuda.manual_seed(random_seed)
@@ -56,10 +58,9 @@ if __name__ == "__main__":
     submission = pd.read_csv(os.path.join(test_dir, "info.csv"))
     image_dir = os.path.join(test_dir, "images")
 
-    device = torch.device(
-        "cuda:0" if torch.cuda.is_available() else "cpu"
-    )  # 학습 때 GPU 사용여부 결정. Colab에서는 "런타임"->"런타임 유형 변경"에서 "GPU"를 선택할 수 있음
+    device = prepare_device()
 
+    
     # Test Dataset 클래스 객체를 생성하고 DataLoader를 만듭니다.
     image_paths = [os.path.join(image_dir, img_id) for img_id in submission.ImageID]
 

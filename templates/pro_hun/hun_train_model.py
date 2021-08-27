@@ -27,9 +27,8 @@ from torchvision import datasets, models, transforms
 from torchvision.models import resnet18
 from torchvision.transforms import Normalize, Resize, ToTensor
 
-import notification
 from data_preprocessing.data_split import Run_Split
-from utils.util import ensure_dir, prepare_device
+from utils.util import ensure_dir, prepare_device, notification
 
 
 random_seed = 12
@@ -46,27 +45,27 @@ def resnet_finetune(model, classes):
     model = model(pretrained=True)
     # for params in model.parameters():
     #     params.requires_grad = False
-    model.fc = nn.Linear(in_features=512, out_features=classes, bias=True)
-
-    print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
-    print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc.weight.shape[0])
-
-    torch.nn.init.xavier_uniform_(model.fc.weight)
-    stdv = 1.0 / math.sqrt(model.fc.weight.size(1))
-    model.fc.bias.data.uniform_(-stdv, stdv)
-
-    # model.fc = nn.Linear(in_features=2048, out_features=512, bias=True)
-    # model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    # model.relu = nn.ReLU(inplace=True)
-    # model.dropout = nn.Dropout(p=0.2)
-    # model.fc2= nn.Linear(in_features=512, out_features=classes, bias=True)
+    # model.fc = nn.Linear(in_features=512, out_features=classes, bias=True)
 
     # print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
-    # print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc2.weight.shape[0])
+    # print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc.weight.shape[0])
 
-    # torch.nn.init.xavier_uniform_(model.fc2.weight)
-    # stdv = 1.0 / math.sqrt(model.fc2.weight.size(1))
-    # model.fc2.bias.data.uniform_(-stdv, stdv)
+    # torch.nn.init.xavier_uniform_(model.fc.weight)
+    # stdv = 1.0 / math.sqrt(model.fc.weight.size(1))
+    # model.fc.bias.data.uniform_(-stdv, stdv)
+
+    model.fc = nn.Linear(in_features=2048, out_features=512, bias=True)
+    model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    model.relu = nn.ReLU(inplace=True)
+    model.dropout = nn.Dropout(p=0.2)
+    model.fc2= nn.Linear(in_features=512, out_features=classes, bias=True)
+
+    print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
+    print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc2.weight.shape[0])
+
+    torch.nn.init.xavier_uniform_(model.fc2.weight)
+    stdv = 1.0 / math.sqrt(model.fc2.weight.size(1))
+    model.fc2.bias.data.uniform_(-stdv, stdv)
 
     return model
 
@@ -148,6 +147,7 @@ if __name__ == "__main__":
             Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
         ]
     )
+    
 
     LEARNING_RATE = 0.0001  # 학습 때 사용하는 optimizer의 학습률 옵션 설정
     NUM_EPOCH = 10  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
@@ -280,4 +280,4 @@ if __name__ == "__main__":
     ed_time = time.time()
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
-    notification
+    notification(best_test_accuracy)
