@@ -20,4 +20,4 @@ def top_k_acc(output, target, k=3):
     return correct / len(target)
 
 def F_score(output, target):
-    return f1_score(output.item(), target.item())
+    return f1_score(output.cpu().to_list(), target.cpu().to_list())

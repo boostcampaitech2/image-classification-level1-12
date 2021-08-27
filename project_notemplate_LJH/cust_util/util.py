@@ -5,7 +5,7 @@ import torch
 
 
 
-def mask_label_check(filename, schema = {'/incorrect': 0, '/mask': 1, '/normal': 2})->int:
+def mask_label_check(filename, schema = {'/incorrect': 1, '/mask': 0, '/normal': 2})->int:
     '''
     usage
     label = mask_label_chedk('normal.jpg')
@@ -19,7 +19,22 @@ def mask_label_check(filename, schema = {'/incorrect': 0, '/mask': 1, '/normal':
     raise Exception
 
 
-def dirlister(root: str, meta: pd.DataFrame, mode = 'train')->list:
+def age_label_check(age_label)->int:
+    '''
+    usage
+    label = mask_label_chedk('normal.jpg')
+    label >> 2
+    '''
+    if age_label < 30:
+        age_label = 0
+    if age_label >= 30 and age_label < 60:
+        age_label = 1
+    if age_label >= 60:
+        age_label = 2
+
+    return age_label
+
+def dirlister(root: str, meta: pd.DataFrame, mode)->list:
     mode_dict = {'train': 'path', 'sub':'ImageID'}
     image_dirs = [os.path.join(root,'images', x) for x in meta[mode_dict[mode]].values]
     if mode == 'train':
@@ -36,13 +51,18 @@ def dirlister(root: str, meta: pd.DataFrame, mode = 'train')->list:
     return image_path
 
 
+# def to_label(mask, age, gender)->int:
+#     m = torch.argmax(mask, dim = 1)
+#     a = torch.argmax(age, dim = 1)
+#     g = torch.argmax(gender, dim = 1)
+
+#     return (6*m +3*g + a).tolist()
+
+
 def to_label(mask, age, gender)->int:
-    m = torch.argmax(mask).item()
-    a = torch.argmax(age).item()
-    g = torch.argmax(gender).item()
-
-    return int(6*m +3*g + a)
-
+    if int(6*mask +3*gender + age) > 17:
+        raise Exception
+    return int(6*mask +3*gender + age)
 
 class CV(object):
     def __init__(self, dirs: list, fold_num: int, sort = True):
@@ -80,3 +100,12 @@ class CV(object):
             self.current += 1
 
             return [train, valid, test]
+
+
+##testcode
+# import torch
+# m = torch.tensor([[8e-1, 6e-2,2e-2]])
+# a = torch.tensor([[0.35,0.29,-0.02]])
+# g = torch.tensor([[0.58,0.28]])
+
+# print(to_label(m, a, g))

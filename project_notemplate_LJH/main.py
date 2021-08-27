@@ -3,131 +3,170 @@ import pandas as pd
 import torch
 import os
 from tqdm import tqdm
+import datetime
 
 import sys
 sys.path.append('/opt/ml/repos/project_notemplete_LJH/')
 
 from cust_util.util import dirlister, CV, to_label
-from dataloader import MaskDataLoader, MaskDataset, collate_fn, sub_collate_fn
+from dataloader import MaskDataLoader, MaskDataset, collate_fn, sub_collate_fn, test_collate_fn
 import loss, metric, Model
+from loss import MaskLoss
+from finetune import tuner
+
+# fix random seeds for reproducibility
+SEED = 32
+torch.manual_seed(SEED)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+np.random.seed(SEED)
 
 device = torch.device('cuda:0' if torch.cuda.device_count() > 0 else 'cpu')
 
 TRAIN_DATA_ROOT = '/opt/ml/input/data/train/'
 SUB_DATA_ROOT = '/opt/ml/input/data/eval/'
-train_meta = pd.read_csv(os.path.join(TRAIN_DATA_ROOT, 'train.csv'))
-sub_meta = pd.read_csv(os.path.join(SUB_DATA_ROOT, 'info.csv'))
+epoch = 2
+batch_size = 32
+lr = 1e-5
+cv_num = 3
+freeze = False
+debug = False
+addition = 'to_layer_one'
 
-train_dir_list = dirlister(TRAIN_DATA_ROOT, train_meta)
-train_cv = CV(train_dir_list, 5)
+print(f'\nDEBUG: {debug}')
+print(f'estimated end time: {datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))) + datetime.timedelta(minutes=10*(epoch*cv_num + 1) + 3)}')
 
+train_meta = pd.read_csv(os.path.join(TRAIN_DATA_ROOT, 'train.csv'), nrows = 100 if debug else None)
+sub_meta = pd.read_csv(os.path.join(SUB_DATA_ROOT, 'info.csv'), nrows = 100 if debug else None)
+
+train_dir_list = dirlister(TRAIN_DATA_ROOT, train_meta, mode = 'train')
 sub_dir_list = dirlister(SUB_DATA_ROOT, sub_meta, mode = 'sub')
-sub_dataloader = MaskDataLoader(MaskDataset(sub_dir_list, meta = sub_meta, mode = 'sub'), 1, collate_fn=sub_collate_fn)
+train_cv = CV(train_dir_list, cv_num)
 
-#total_dataloader = MaskDataLoader(MaskDataset(train_dir_list, meta = train_meta), 1000, collate_fn=collate_fn)
+total_dataloader = MaskDataLoader(MaskDataset(train_dir_list, mode = 'train'), batch_size, collate_fn=collate_fn)
+sub_dataloader = MaskDataLoader(MaskDataset(sub_dir_list, mode = 'sub', shuffle = False), batch_size, collate_fn=sub_collate_fn)
 
-
-
-acc = metric.accuracy
-criterion = loss.F1_loss
+met = metric.accuracy
+criterion = loss.MaskLoss()
 # criterion = nn.BCEWithLogitsLoss()  #시그모이드가 로스에 추가됨
-epoch = 1
-batch_size = 64
-cv_train_loss, cv_valid_loss, cv_train_acc, cv_valid_acc= [], [], [], []
-cv_test_acc, cv_test_loss = [], []
 
-for idx, (train, valid, test) in enumerate(train_cv):
-    print(f'start fold {idx + 1}/{train_cv.maxfold}')
-    
-    test_dataloader = MaskDataLoader(MaskDataset(test, meta = train_meta), batch_size, collate_fn=collate_fn)
-    train_dataloader = MaskDataLoader(MaskDataset(train, meta = train_meta), batch_size, collate_fn=collate_fn)
-    valid_dataloader = MaskDataLoader(MaskDataset(valid, meta = train_meta), batch_size, collate_fn=collate_fn)
+cv_train_loss, cv_valid_loss= [], []
+cv_test_acc, cv_test_loss = [], []
+for cv_idx, (train, valid, test) in enumerate(train_cv):
+
+    print(f'\nstart fold {cv_idx + 1}/{train_cv.maxfold}')
+    test_dataloader = MaskDataLoader(MaskDataset(test, mode = 'train'), batch_size, collate_fn=test_collate_fn)
+    train_dataloader = MaskDataLoader(MaskDataset(train, mode = 'train'), batch_size, collate_fn=collate_fn)
+    valid_dataloader = MaskDataLoader(MaskDataset(valid, mode = 'train'), batch_size, collate_fn=test_collate_fn)
 
     model = Model.MaskModel().to(device)
-    for param in model.backbone.parameters():
-            param.requires_grad = False
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.05)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     
     #train with freeze
-    lr = 0.05
-    train_loss, valid_loss = [[],[],[]], [[],[],[]]
-    train_acc, valid_acc = [[],[],[]], [[],[],[]]
-
-    
-
     for e in range(epoch):
-        print(f'---epoch{e}---')
+
+        print(f'    ---epoch{e + 1}---')
+        torch.cuda.empty_cache()
         model.train()
-        for idx, (img, age, gender, mask) in tqdm(enumerate(train_dataloader), total = len(train)//batch_size + 1):
+        total_metric = 0
+        total_loss = 0
+        for idx, (img, label) in tqdm(enumerate(train_dataloader), total = len(train_dataloader)//batch_size + 1, leave=False, desc = '    train: '):
+            
             optimizer.zero_grad()
-            img, age, gender, mask = img.to(device), age.to(device),gender.to(device),mask.to(device)
 
-            age_pred, gender_pred, mask_pred  = model(img)
-            loss_age, loss_mask, loss_gender = criterion(age_pred, age), criterion(mask_pred, mask), criterion(gender_pred, gender)
-            acc_age, acc_mask, acc_gender = acc(age_pred, age), acc(mask_pred, mask), acc(gender_pred, gender)
+            img, label = img.to(device), label.to(device)
+            label_pred  = model(img)
 
-            loss_sum = loss_age+loss_mask+loss_gender
+            loss_sum = criterion(label_pred, label)
             loss_sum.backward()
             optimizer.step()
 
-            train_loss[0].append(loss_age.item())
-            train_loss[1].append(loss_mask.item())
-            train_loss[2].append(loss_gender.item())
+            total_loss += loss_sum.cpu().item()
+            metric_score = met(label_pred, label)
+            total_metric += metric_score
 
-            train_acc[0].append(acc_age)
-            train_acc[1].append(acc_mask)
-            train_acc[2].append(acc_gender)
-        print(f'    train epoch {e} total loss: {loss_sum.item()}, age_acc: {acc_age}, mask_acc: {acc_mask}, gender_acc = {acc_gender}')
-
+        print(f'    train epoch {e + 1} total loss: {total_loss/ (idx + 1)}, metric score: {total_metric / (idx + 1)}')
+        cv_train_loss.append(total_loss/ (idx + 1))
+        torch.cuda.empty_cache()
 
         model.eval()
-        for idx, batch in valid_dataloader:
-            
+        total_acc= 0
+        total_loss = 0
+        for idx, (img, label) in tqdm(enumerate(valid_dataloader), total = len(valid_dataloader)//batch_size + 1, leave = False, desc = '    valid: '):
             with torch.no_grad():
-                age_pred, gender_pred, mask_pred  = model(img)
-                loss_age, loss_mask, loss_gender = criterion(age_pred, age), criterion(mask_pred, mask), criterion(gender_pred, gender)
-                acc_age, acc_mask, acc_gender = acc(age_pred, age), acc(mask_pred, mask), acc(gender_pred, gender)
-                loss_sum = loss_age+loss_mask+loss_gender
+                img, label = img.to(device), label.to(device)
 
-                valid_loss[0].append(loss_age.item())
-                valid_loss[1].append(loss_mask.item())
-                valid_loss[2].append(loss_gender.item())
+                label_pred  = model(img)
+                loss_sum = criterion(label_pred, label)
+                total_loss += loss_sum.cpu().item()
+                total_acc += met(label_pred, label)
 
-                valid_acc[0].append(acc_age)
-                valid_acc[1].append(acc_mask)
-                valid_acc[2].append(acc_gender)
-            
-        print(f'    valid epoch {e} total loss: {loss_sum.item()}, age_acc: {acc_age}, mask_acc: {acc_mask}, gender_acc = {acc_gender}')
-    
-    cv_train_loss.append(train_loss)
-    cv_valid_loss.append(valid_loss)
-    cv_train_acc.append(train_acc)
-    cv_valid_acc.append(valid_acc)
+        print(f'    valid epoch {e + 1} total loss: {total_loss/ (idx + 1)}, metric score: {total_acc / (idx + 1)}')
+        cv_valid_loss.append(total_loss/ (idx + 1))
+
+    del img, label
+    torch.cuda.empty_cache()
 
     ##evaluate
-    acc_age, acc_mask, acc_gender = 0,0,0
+    metric_score = 0
+    total_loss = 0
     model.eval()
-    for idx, batch in test_dataloader:
-        age_pred, gender_pred, mask_pred  = model(img)
-        loss_age, loss_mask, loss_gender = criterion(age_pred, age), criterion(mask_pred, mask), criterion(gender_pred, gender)
-        acc_age+= acc(age_pred, age)
-        acc_mask +=acc(mask_pred, mask)
-        acc_gender +=acc(gender_pred, gender)
-        loss_sum = loss_age+loss_mask+loss_gender
+    for idx, (img, label) in tqdm(enumerate(test_dataloader), total = len(test_dataloader)//batch_size + 1, leave=False, desc = '    test: '):
+        with torch.no_grad():
+            img, label= img.to(device), label.to(device)
+            label_pred  = model(img)
 
+            loss_sum = criterion(label_pred, label)
+            total_loss += loss_sum.cpu().item()
+            metric_score+= met(label_pred, label)
+
+            
     idx += 1
-    cv_test_acc.append([acc_age/idx, acc_mask/idx, acc_gender/idx])
-    cv_test_loss.append([loss_sum.item(), loss_age, loss_mask, loss_gender])
+    cv_test_acc.append(metric_score)
+    cv_test_loss.append([total_loss/ (idx)])
 
-    print(f'    test epoch {e} total loss: {loss_sum.item()}, average_age_acc: {acc_age}, average_mask_acc: {acc_mask}, average_gender_acc = {acc_gender}')  
-        
+    print(f'    fold {cv_idx + 1} test total loss: {total_loss/ (idx)}, metric score: {metric_score / idx}')  
 
+
+#finetune
+torch.cuda.empty_cache()
+model = Model.MaskModel().to(device)
+optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+criterion = loss.MaskLoss()
+
+for e in range(epoch):
+    torch.cuda.empty_cache()
+    model.train()
+    for idx, (img, label) in tqdm(enumerate(train_dataloader), total = len(total_dataloader)//batch_size + 1, leave=False, desc = f'    finetune {e}: '):
+        optimizer.zero_grad()
+
+        img, label = img.to(device), label.to(device)
+        label_pred  = model(img)
+
+        loss_sum = criterion(label_pred, label)
+        loss_sum.backward()
+        optimizer.step()
+
+
+#make submission
+print('start submission')
 out = []
-for batch in sub_dataloader:
-    age, gender, mask = model(batch)
-    out.append(to_label(mask, age, gender))
+model.eval()
+for idx, (img) in tqdm(enumerate(sub_dataloader), total = len(sub_dir_list)//batch_size + 1, leave = False):
+    with torch.no_grad():
+        img = img.to(device)
+        labels = model(img)
+
+        for label in labels:
+            out.append(torch.argmax(label, dim = -1))
 
 out_csv = sub_meta.copy()
 out_csv['ans'] = out
-out_csv.to_csv('/opt/ml/repos/project_LJH/submission.py', index = False)
+savedir = '/opt/ml/repos/project_notemplate_LJH/results/'
+filename =f'{model.name}_epoch{epoch}_lr{lr}_batchsize{batch_size}_freeze{freeze}_{addition}.csv'
+torch.save(model.state_dict(), savedir + f'_{addition}_weight.pt')
+
+print(out_csv.head())
+out_csv.to_csv(os.path.join(savedir, filename), index = False)
+
 print('complete')
