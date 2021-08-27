@@ -16,12 +16,12 @@ if __name__ == '__main__':
 
     TRAIN_DATA_ROOT = '/opt/ml/input/data/train/'
     SUB_DATA_ROOT = '/opt/ml/input/data/eval/'
-    epoch = 10
+    epoch = 5
     batch_size = 20
     lr = 1e-5
     cv_num = 3
     freeze = False
-    debug = False
+    debug = True
     addition = 'to_layer_one'
 
     print(f'\nDEBUG: {debug}')
