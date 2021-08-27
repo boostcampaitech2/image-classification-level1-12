@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 from torchvision.models.resnet import resnet152, resnet50
-from torchvision.transforms.transforms import RandomRotation
+from torchvision.transforms.transforms import GaussianBlur, RandomRotation
 import tqdm
 from PIL import Image
 from pytz import timezone
@@ -28,7 +28,9 @@ from torchvision.models import resnet18
 from torchvision.transforms import Normalize, Resize, ToTensor
 
 import notification
-from hun_kfold import Run_Split
+from data_preprocessing.data_split import Run_Split
+from utils.util import ensure_dir, prepare_device
+
 
 random_seed = 12
 torch.manual_seed(random_seed)
@@ -86,8 +88,6 @@ class Mask_Dataset(object):
         )
         self.df = df
 
-        
-
 
     def __getitem__(self, idx):
         # img_path = Path(self.df["path"][idx])
@@ -117,12 +117,11 @@ if __name__ == "__main__":
     train_path = "/opt/ml/image-classification-level1-12/templates/data/train"
     train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
     run_split = Run_Split(os.path.join(train_path, "image_all"))
-    train_list, val_list = run_split.train_val_split(train_label)
+    fold_num = 5
+    train_list, val_list = run_split.train_val_split(train_label, fold_num)
 
-
-    device = torch.device(
-        "cuda:0" if torch.cuda.is_available() else "cpu"
-    )  # 학습 때 GPU 사용여부 결정. Colab에서는 "런타임"->"런타임 유형 변경"에서 "GPU"를 선택할 수 있음
+    # GPU가 사용가능하면 사용하고, 아니면 CPU 사용
+    device = prepare_device()
     print(f"{device} is using!")
 
 
@@ -143,10 +142,10 @@ if __name__ == "__main__":
     data_transform = transforms.Compose(
         [
             Resize((512, 384), Image.BILINEAR),
+            GaussianBlur(7, sigma=(0.1, 2)),
+            RandomRotation([-8, +8]),
             ToTensor(),
             Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
-            GaussianBlur(sigma=(0, 3.0)),
-            RandomRotation([-8, +8]),
         ]
     )
 
@@ -156,15 +155,13 @@ if __name__ == "__main__":
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
     )
-    dirname = Path(
-        os.path.join(
-            "/opt/ml/image-classification-level1-12/templates/pro_hun/output/model",
-            f"model_{now}",
-        )
-    )
-    dirname.mkdir(parents=True, exist_ok=False)
+    model_save_path = "/opt/ml/image-classification-level1-12/templates/pro_hun/output/model"
+    dirname = os.path.join(model_save_path, f"model_{now}")
+    ensure_dir(dirname)
+
+
     st_time = time.time()
-    for i in range(5):
+    for i in range(fold_num):
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
         mnist_resnet = resnet_finetune(resnet18, 18).to(device)  
 
@@ -176,21 +173,21 @@ if __name__ == "__main__":
         )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
 
         train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
-        train_loader = torch.utils.data.DataLoader(
+        train_loader = DataLoader(
             train_dataset,
             batch_size=128,
             # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
-            # drop_last=True,
+            drop_last=False,
             #  num_workers=2
         )
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
-        val_loader = torch.utils.data.DataLoader(
+        val_loader = DataLoader(
             val_dataset,
             batch_size=128,
             collate_fn=collate_fn,
-            # drop_last=True,
+            drop_last=False,
             #  num_workers=2
         )
 
@@ -217,9 +214,8 @@ if __name__ == "__main__":
                 elif phase == "test":
                     mnist_resnet.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
 
-                for ind, (images, labels) in enumerate(
-                    tqdm.tqdm(dataloaders[phase], leave=False)
-                ):
+
+                for ind, (images, labels) in enumerate(tqdm.tqdm(dataloaders[phase], leave=False)):
                     images = torch.stack(list(images), dim=0).to(device)
                     labels = torch.tensor(list(labels)).to(device)
 
@@ -237,6 +233,7 @@ if __name__ == "__main__":
                         if phase == "train":
                             loss.backward()  # 모델의 예측 값과 실제 값의 CrossEntropy 차이를 통해 gradient 계산
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
+
                     running_loss += loss.item() * images.size(0)  # 한 Batch에서의 loss 값 저장
                     running_acc += torch.sum(
                         preds == labels.data
@@ -262,6 +259,8 @@ if __name__ == "__main__":
                     phase == "test" and best_test_loss > epoch_loss
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
+
+                # Early Stopping Code
                 # if phase == "test":
                 #     if pred_f1 <= epoch_f1:
                 #         pred_f1 = epoch_f1
