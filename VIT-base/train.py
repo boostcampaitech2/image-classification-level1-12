@@ -1,6 +1,7 @@
 import pandas as pd
 import os, sys, random, tqdm
 from torch import torch
+from sklearn.model_selection import StratifiedKFold
 
 sys.path.append('/opt/ml/repos/VIT-base/')
 from util import dirlister, CV
@@ -20,7 +21,7 @@ def sub_session(batch_size, debug):
 def trainer(model, dataloader, batch_size, mode, criterion, optimizer, metric, device):
     total_metric, total_loss= 0, 0
     torch.cuda.empty_cache()
-    for idx, (img, label) in tqdm(enumerate(dataloader), total = len(dataloader)//batch_size + 1, leave=False, desc = '    train: '):
+    for idx, (img, label) in tqdm(enumerate(dataloader), total = len(dataloader)//batch_size + 1, leave=False, desc = f'    {mode}: '):
         optimizer.zero_grad()
         img, label = img.to(device), label.to(device)
         label_pred  = model(img)
@@ -34,11 +35,10 @@ def trainer(model, dataloader, batch_size, mode, criterion, optimizer, metric, d
         metric_score = metric(label_pred, label)
         total_metric += metric_score
 
-    return model, total_loss/idx, total_metric/idx
+    return model, round(total_loss/idx, 3), round(total_metric/idx, 3)
 
 
 def train_session(epoch, batch_size, lr, debug):
-
     TRAIN_DATA_ROOT = '/opt/ml/input/data/train/'
     device = torch.device('cuda:0' if torch.cuda.device_count() > 0 else 'cpu')
     train_meta = pd.read_csv(os.path.join(TRAIN_DATA_ROOT, 'train.csv'), nrows = 100 if debug else None)
@@ -47,8 +47,7 @@ def train_session(epoch, batch_size, lr, debug):
     met = accuracy
     criterion = Maskloss()
     
-    train_dir_list = random.shuffle(train_dir_list)
-    train, valid = train_dir_list[:len(train_dir_list)*0.8], train_dir_list[len(train_dir_list)*0.8:]
+    train, valid = StratifiedKFold(n_splits = 1, shuffle = True)(train_dir_list)
     train_dataloader = MaskDataLoader(MaskDataset(train, mode = 'train'), batch_size, collate_fn=collate_fn)
     valid_dataloader = MaskDataLoader(MaskDataset(valid, mode = 'train'), batch_size, collate_fn=collate_fn)
 

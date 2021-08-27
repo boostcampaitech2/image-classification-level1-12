@@ -3,8 +3,9 @@ import datetime
 import numpy as np
 from train import train_session, trainer
 
-# fix random seeds for reproducibility
+
 if __name__ == '__main__':
+    # fix random seeds for reproducibility
     SEED = 32
     torch.manual_seed(SEED)
     torch.backends.cudnn.deterministic = True
@@ -26,5 +27,6 @@ if __name__ == '__main__':
     print(f'\nDEBUG: {debug}')
     print(f'estimated end time: {datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))) + datetime.timedelta(minutes=10*(epoch*cv_num + 1) + 3)}')
 
-    train_session(epoch, batch_size, lr, debug)
+    model = train_session(epoch, batch_size, lr, debug)
+    torch.save(model.state_dict(), '/opt/ml/repos/VIT-base/result')
     
