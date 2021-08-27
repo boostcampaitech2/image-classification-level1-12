@@ -1,37 +1,8 @@
-from einops import rearrange, repeat, reduce
-from einops.layers.torch import Rearrange, Reduce
-from torch import torch, nn
+
 import os
 import pandas as pd
+from sklearn.model_selection import StratifiedKFold
 
-
-class image_embedding(nn.Module):
-  def __init__(self, in_channels: int = 3, img_size: int = 224, patch_size: int = 16, emb_dim: int = 16*16*3):
-    super().__init__()
-
-    self.rearrange = Rearrange('b c (num_w p1) (num_h p2) -> b (num_w num_h) (p1 p2 c) ', p1=patch_size, p2=patch_size)
-    self.linear = nn.Linear(in_channels * patch_size * patch_size, emb_dim)
-
-    self.cls_token = nn.Parameter(torch.randn(1, 1, emb_dim))
-    
-    n_patches = img_size * img_size // patch_size**2
-    self.positions = nn.Parameter(torch.randn(n_patches + 1, emb_dim))
-
-  def forward(self, x):
-    batch, channel, width, height = x.shape
-
-    x = self.rearrange(x) # flatten patches 
-    x = self.linear(x) # embedded patches 
-
-    # ================ ToDo1 ================ #
-    # (1) Build [token; image embedding] by concatenating class token with image embedding
-    c = repeat(self.cls_token, '() n d -> b n d', b=batch) 
-    x = torch.cat((c ,x), axis = 1)
-
-    # (2) Add positional embedding to [token; image embedding]
-    x = x + self.positions
-    # ======================================= #
-    return x
 
 
 def mask_label_check(filename, schema = {'/incorrect': 1, '/mask': 0, '/normal': 2})->int:
@@ -68,7 +39,7 @@ def dirlister(root: str, meta: pd.DataFrame, mode)->list:
     returns every image path which is in form
 
     usage
-    dirlister(rootdir, metadata)
+    dirlister(rootdir, metadata, 'train')
     >>> [1.jpg, 2.jpg.....]
     '''
     mode_dict = {'train': 'path', 'sub':'ImageID'}
@@ -97,7 +68,7 @@ class CV(object):
         self.current = 0
         self.maxfold = fold_num
 
-        self.kf = KFold(n_splits = fold_num)
+        self.kf = StratifiedKFold(n_splits = fold_num, shuffle = True)
         self.fold_index = []  #list of train_valid_test
 
         if sort:
