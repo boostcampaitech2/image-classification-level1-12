@@ -59,7 +59,7 @@ def main(config):
     loss_fn = MaskLoss()
     metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
-    checkpoint_file_path = "/tmp/pycharm_project_862/saved/models/Mask_vgg19_lin2/0826_045605/model_best.pth"
+    checkpoint_file_path = "/tmp/pycharm_project_862/saved/models/Mask_vgg19_lin2/0826_081056/model_best.pth"
     logger.info('Loading checkpoint: {} ...'.format(checkpoint_file_path))
     checkpoint = torch.load(checkpoint_file_path)
     state_dict = checkpoint['state_dict']
@@ -83,7 +83,7 @@ def main(config):
     # 제출할 파일을 저장합니다.
     submission = pd.read_csv("/opt/ml/mask_data/eval/info.csv")
     submission['ans'] = all_predictions
-    submission.to_csv('./saved/submission/submission_2108261529.csv', index=False)
+    submission.to_csv('./saved/submission/submission_2108261802.csv', index=False)
     print('test inference is done!')
 
 
