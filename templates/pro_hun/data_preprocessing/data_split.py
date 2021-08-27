@@ -41,19 +41,11 @@ class Run_Split:
         y = train_label["label"]
 
         train_list, val_list = [], []
-
-        for idx, (train_idx, val_idx) in enumerate(KFold.split(X, y)):
+        
+        for train_idx, val_idx in KFold.split(X, y):
             train_list.append(train_label[train_label.index.isin(X[train_idx])].reset_index(drop=True))
-            val_list.append(train_label[train_label.index.isin(X[train_idx])].reset_index(drop=True))
-            # globals()[f"train_df{idx}"] = train_label[
-            #     train_label.index.isin(X[train_idx])
-            # ].reset_index(drop=True)
-            # globals()[f"val_df{idx}"] = train_label[
-            #     train_label.index.isin(X[val_idx])
-            # ].reset_index(drop=True)
+            val_list.append(train_label[train_label.index.isin(X[val_idx])].reset_index(drop=True))
 
-        # train_list = [train_df0, train_df1, train_df2, train_df3, train_df4]
-        # val_list = [val_df0, val_df1, val_df2, val_df3, val_df4]
 
         return train_list, val_list
 
@@ -63,6 +55,7 @@ if __name__ == "__main__":
     train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
     run_train = Run_Split(os.path.join(train_path, "image_all"))
     train_list, val_list = run_train.train_val_split(train_label)
+
     for i in tqdm.tqdm(range(5)):
         run_train.image_all(train_list[i], f"train{i}_image")
         run_train.image_all(val_list[i], f"val{i}_image")
