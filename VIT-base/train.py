@@ -75,6 +75,7 @@ def validater(model, dataloader, batch_size, mode, criterion, optimizer, device)
     return model, round(total_loss/idx, 3), round(total_metric/idx, 3)
 
 def fit_session(epoch, batch_size, lr, debug):
+    print('\nstart fitting')
     TRAIN_DATA_ROOT = '/opt/ml/input/data/train/'
     device = torch.device('cuda:0' if torch.cuda.device_count() > 0 else 'cpu')
     train_meta = pd.read_csv(os.path.join(TRAIN_DATA_ROOT, 'train.csv'), nrows = 100 if debug else None)
@@ -89,7 +90,7 @@ def fit_session(epoch, batch_size, lr, debug):
     for e in range(epoch):
         model.train()
         torch.cuda.empty_cache()
-        model, _loss, _metric = trainer(model, full_dataloader, batch_size, 'train', criterion, optimizer, device)
+        model, _loss, _metric = trainer(model, full_dataloader, batch_size, f'fit fold {e}', criterion, optimizer, device)
 
     return model
 

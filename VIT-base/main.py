@@ -21,7 +21,7 @@ if __name__ == '__main__':
     lr = 1e-5
     cv_num = 3
     freeze = False
-    debug = True
+    debug = False
     addition = 'VIT'
 
     print(f'\nDEBUG: {debug}')
