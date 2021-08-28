@@ -45,24 +45,12 @@ np.random.seed(random_seed)
 random.seed(random_seed)
 
 
-
-
-
-def collate_fn(batch):
-    return tuple(zip(*batch))
-
-
 class Mask_Dataset(object):
-    def __init__(self, transforms, name, df):
+    def __init__(self, transforms, name, df, path):
         self.transforms = transforms
         self.name = name
-        self.imgs = list(
-            sorted(
-                os.listdir(
-                    f"/opt/ml/image-classification-level1-12/templates/data/train/image_all/{self.name}_image"
-                )
-            )
-        )
+        self.path = path
+        self.imgs = sorted(os.listdir(os.path.join(self.path, f'image_all/{self.name}_image')))
         self.df = df
 
 
@@ -90,27 +78,33 @@ class Mask_Dataset(object):
         return len(self.imgs)
 
 
+def collate_fn(batch):
+    return tuple(zip(*batch))
+
+
 if __name__ == "__main__":
-    train_path = "/opt/ml/image-classification-level1-12/templates/data/train"
+    args = argparse.ArgumentParser(description='PyTorch Template')
+    args.add_argument('-lr', '--learning_rate', default=0.0001, type=float, help='learning rate for training')
+    args.add_argument('-bs', '--batch_size', default=128, type=int, help='batch size for training')
+    args.add_argument('--epoch', default=10, type=int, help='training epoch size')
+    args.add_argument('--fold_size', default=5, type=int, help='StratifiedKFold size')
+    args.add_argument('--train_path', default="/opt/ml/image-classification-level1-12/templates/data/train", type=str, help='train_path')
+    args.add_argument('--model_save', default="/opt/ml/image-classification-level1-12/templates/pro_hun/output/model_save", type=str, help='model_save_path')
+    args.add_argument('--normalize_mean', default=(0.5601, 0.5241, 0.5014), type=float, help='Normalize mean value')
+    args.add_argument('--normalize_std', default=(0.2331, 0.2430, 0.2456), type=float, help='Normalize std value')
+
+    args = args.parse_args()
+
+
+    train_path = args.train_path
     train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
     run_split = Run_Split(os.path.join(train_path, "image_all"))
-    fold_num = 5
+    fold_num = args.fold_size
     train_list, val_list = run_split.train_val_split(train_label, fold_num)
 
     # GPU가 사용가능하면 사용하고, 아니면 CPU 사용
     device = prepare_device()
     print(f"{device} is using!")
-
-
-    args = argparse.ArgumentParser(description='PyTorch Template')
-    args.add_argument('-lr', '--learning_rate', default=0.0001, type=float, help='learning rate for training')
-    args.add_argument('-bs', '--batch_size', default=128, type=int, help='batch size for training')
-    args.add_argument('--epoch', default=10, type=int, help='training epoch size')
-    
-    args = args.parse_args()
-
-
-
 
 
     # data_transform = albumentations.Compose([
@@ -133,15 +127,13 @@ if __name__ == "__main__":
             # GaussianBlur(3, sigma=(0.1, 2)),
             RandomRotation([-8, +8]),
             ToTensor(),
-            Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+            Normalize(mean=args.normalize_mean, std=args.normalize_std),
         ]
     )
     
 
-    now = (
-        dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
-    )
-    model_save_path = "/opt/ml/image-classification-level1-12/templates/pro_hun/output/model_save"
+    now = dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
+    model_save_path = args.model_save
     dirname = os.path.join(model_save_path, f"model_{now}")
     ensure_dir(dirname)
 
@@ -151,29 +143,25 @@ if __name__ == "__main__":
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
         mnist_resnet = resnet_finetune(resnet18, 18).to(device)  
 
-        loss_fn = (
-            torch.nn.CrossEntropyLoss()
-        )  # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
-        optimizer = torch.optim.Adam(
-            mnist_resnet.parameters(), lr=args.learning_rate
-        )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
+        # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
+        loss_fn = torch.nn.CrossEntropyLoss()
+        # weight 업데이트를 위한 optimizer를 Adam으로 사용함
+        optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)  
 
-        train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
+        train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i], train_path)
         train_loader = DataLoader(
             train_dataset,
             batch_size=args.batch_size,
             # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
-            drop_last=False,
             #  num_workers=2
         )
-        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
+        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path)
         val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,
             collate_fn=collate_fn,
-            drop_last=False,
             #  num_workers=2
         )
 
