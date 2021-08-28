@@ -3,7 +3,7 @@ import pandas as pd
 import cvlib as cv
 import os 
 from pathlib import Path
-from utils.util import ensure_dir
+from utils.util import ensure_dir, prepare_device
 from PIL import Image
 import tqdm
 
@@ -28,10 +28,11 @@ def crop_face(coord_list, path):
 
 	crop_path = Path(path)
 	ensure_dir(str(crop_path.parent))
-	image.save(crop_path)
+	cv2.imwirte(crop_path, crop_path)
 	
 
 if __name__ == '__main__':
+	prepare_device()
 	label_path = '/opt/ml/image-classification-level1-12/templates/data/train/train_with_label.csv'
 	df = pd.read_csv(label_path)
 	df['normal'] = df['path'].map(lambda x: 1 if 'normal' in x else 0)

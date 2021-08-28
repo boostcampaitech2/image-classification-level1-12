@@ -43,7 +43,7 @@ random.seed(random_seed)
 
 
 class Mask_Dataset(object):
-    def __init__(self, transforms, name, df, path):
+    def __init__(self, transforms, name, df, path, image_type):
         self.transforms = transforms
         self.name = name
         self.path = path
@@ -51,10 +51,13 @@ class Mask_Dataset(object):
             os.listdir(os.path.join(self.path, f"image_all/{self.name}_image"))
         )
         self.df = df
+        # crop이미지를 사용하고 싶으면 "crop_path", 원본은 "path"
+        self.image_type = image_type
+
 
     def __getitem__(self, idx):
         # img_path = Path(self.df["path"][idx])
-        img_path = self.df["path"][idx]
+        img_path = self.df[self.image_type][idx]
         target = self.df["label"][idx]
 
         # img = cv2.imread(img_path)
@@ -117,6 +120,12 @@ if __name__ == "__main__":
         type=float,
         help="Normalize std value",
     )
+    args.add_argument(
+        "--image_type",
+        default="path",
+        type=str,
+        help="Use crop image or Original",
+    )
 
     args = args.parse_args()
 
@@ -171,7 +180,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
 
         train_dataset = Mask_Dataset(
-            data_transform, f"train{i}", train_list[i], train_path
+            data_transform, f"train{i}", train_list[i], train_path, args.image_type
         )
         train_loader = DataLoader(
             train_dataset,
@@ -181,7 +190,7 @@ if __name__ == "__main__":
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
             #  num_workers=2
         )
-        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path)
+        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path, args.image_type)
         val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,

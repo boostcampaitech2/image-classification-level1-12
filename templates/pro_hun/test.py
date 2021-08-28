@@ -130,6 +130,7 @@ if __name__ == "__main__":
                     all_predictions[idx] = pred / len(model_listdir)
                 else:
                     all_predictions[idx] += pred / len(model_listdir)
+
             idx += 1
             if idx % 500 == 0:
                 ed_time = time.time()
