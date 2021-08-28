@@ -26,7 +26,7 @@
     },
     "loss": "nll_loss",
     "metrics": [
-        "mask_total_accuracy"
+        "mask_total_accuracy", "mask_accuracy", "gender_accuracy", "age_accuracy"
     ],
     "lr_scheduler": {
         "type": "StepLR",

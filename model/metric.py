@@ -21,6 +21,18 @@ def mask_total_accuracy(output: Tuple[Tensor, Tensor, Tensor], target: Tuple[Ten
     return num_correct / len(total_correct)
 
 
+def mask_accuracy(output: Tuple[Tensor, Tensor, Tensor], target: Tuple[Tensor, Tensor, Tensor]):
+    return accuracy(output[0], target[0])
+
+
+def gender_accuracy(output: Tuple[Tensor, Tensor, Tensor], target: Tuple[Tensor, Tensor, Tensor]):
+    return accuracy(output[1], target[1])
+
+
+def age_accuracy(output: Tuple[Tensor, Tensor, Tensor], target: Tuple[Tensor, Tensor, Tensor]):
+    return accuracy(output[2], target[2])
+
+
 def accuracy(output, target):
     with torch.no_grad():
         pred = torch.argmax(output, dim=1)

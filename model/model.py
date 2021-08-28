@@ -38,6 +38,44 @@ class MaskModel(nn.Module):
         self.linear_age_1 = nn.Linear(1000, 256, bias=True)
         self.linear_age_2 = nn.Linear(256, 3, bias=True)
 
+        # org_vgg19 = models.vgg19_bn(pretrained=True)
+        #
+        # self.vgg_features = org_vgg19.features
+        # self.vgg_avg_pool = org_vgg19.avgpool
+        #
+        # self.classifier_common_fc = nn.Sequential(
+        #     nn.Linear(512 * 7 * 7, 4096),
+        #     nn.ReLU(True),
+        #     nn.Dropout(),
+        #     nn.Linear(4096, 4096),
+        #     nn.ReLU(True),
+        #     nn.Dropout(),
+        #     nn.Linear(4096, 1024),
+        #     nn.ReLU(True),
+        #     nn.Dropout()
+        # )
+        #
+        # self.classifier_mask_fc = nn.Sequential(
+        #     nn.Linear(1024, 256),
+        #     nn.ReLU(True),
+        #     nn.Dropout(),
+        #     nn.Linear(256, 3),
+        # )
+        #
+        # self.classifier_gender_fc = nn.Sequential(
+        #     nn.Linear(1024, 256),
+        #     nn.ReLU(True),
+        #     nn.Dropout(),
+        #     nn.Linear(256, 2),
+        # )
+        #
+        # self.classifier_age_fc = nn.Sequential(
+        #     nn.Linear(1024, 256),
+        #     nn.ReLU(True),
+        #     nn.Dropout(),
+        #     nn.Linear(256, 3),
+        # )
+
     def forward(self, x):
         x = self.vgg19(x)
 
@@ -58,6 +96,15 @@ class MaskModel(nn.Module):
         x_age = F.relu(x_age)
         # x_age = F.dropout(x_age, training=self.training)
         x_age = self.linear_age_2(x_age)
+
+        # x = self.vgg_features(x)
+        # x = self.vgg_avgpool(x)
+        # x = torch.flatten(x, 1)
+        # x = self.classifier_common_fc(x)
+        # x_mask = self.classifier_mask_fc(x)
+        # x_gender = self.classifier_gender_fc(x)
+        # x_age = self.classifier_age_fc(x)
+
 
         return x_mask, x_gender, x_age
 

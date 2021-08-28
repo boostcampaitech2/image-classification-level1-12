@@ -59,7 +59,7 @@ def main(config):
     loss_fn = MaskLoss()
     metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
-    checkpoint_file_path = "/tmp/pycharm_project_862/saved/models/Mask_vgg19_lin2/0826_081056/model_best.pth"
+    checkpoint_file_path = "/tmp/pycharm_project_862/saved/models/Mask_vgg19_lin2//0827_130810/checkpoint-epoch3.pth"
     logger.info('Loading checkpoint: {} ...'.format(checkpoint_file_path))
     checkpoint = torch.load(checkpoint_file_path)
     state_dict = checkpoint['state_dict']
@@ -83,7 +83,18 @@ def main(config):
     # 제출할 파일을 저장합니다.
     submission = pd.read_csv("/opt/ml/mask_data/eval/info.csv")
     submission['ans'] = all_predictions
-    submission.to_csv('./saved/submission/submission_2108261802.csv', index=False)
+    submission.to_csv('./saved/submission/submission_0827_130810.csv', index=False)
+    # epoch: 3
+    # loss: 0.2146139108273299
+    # mask_total_accuracy: 0.9237868785858154
+    # mask_accuracy: 0.9955168776371308
+    # gender_accuracy: 0.9864847046413502
+    # age_accuracy: 0.9404008438818565
+    # val_loss: 0.9550173132369916
+    # val_mask_total_accuracy: 0.8796875476837158
+    # val_mask_accuracy: 0.98984375
+    # val_gender_accuracy: 0.9752604166666666
+    # val_age_accuracy: 0.9096354166666667
     print('test inference is done!')
 
 

@@ -91,7 +91,8 @@ def main(config):
     mask_weight = None
     gender_weight = None
     # age_weight = torch.tensor([1.4, 1., 6.1]).to(device)
-    age_weight = torch.tensor([1.2, 1., 3.4]).to(device)
+    # age_weight = torch.tensor([1.2, 1., 3.4]).to(device)
+    age_weight = torch.tensor([1.2, 1., 6]).to(device)
     criterion = MaskLoss(
                     mask_weight=mask_weight,
                     gender_weight=gender_weight,
