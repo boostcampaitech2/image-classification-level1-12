@@ -175,12 +175,14 @@ if __name__ == "__main__":
         # early_ind = 0
         # pred_f1 = 0.0
         for epoch in range(args.epoch):
+            n_iter = 0
             # if not (flag):
             #     break
             for phase in ["train", "test"]:
                 running_loss = 0.0
                 running_acc = 0.0
                 running_f1 = 0.0
+                n_iter += 1
 
 
                 if phase == "train":
@@ -217,7 +219,7 @@ if __name__ == "__main__":
                 data_len = len(dataloaders[phase].dataset)
                 epoch_loss = epoch_mean(running_loss, data_len)
                 epoch_acc = epoch_mean(running_acc, data_len)
-                epoch_f1 = epoch_mean(running_f1, data_len)
+                epoch_f1 = epoch_mean(running_f1, n_iter)
 
                 print(
                     f"현재 epoch-{epoch}의 {phase}-데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}, F1 Score : {epoch_f1:.3f}"
