@@ -75,7 +75,7 @@ def collate_fn(batch):
     img_list, labels = [], []
     for dir, label in batch:
         img = transform(PIL.Image.open(dir))
-
+        img = img + (0.1**0.5)*torch.randn(img.shape)
         img_list.append(img)
         labels.append(label)
 
