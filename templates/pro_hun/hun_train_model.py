@@ -21,7 +21,6 @@ from torchvision.transforms.transforms import GaussianBlur, RandomRotation
 import tqdm
 from PIL import Image
 from pytz import timezone
-from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 from torchvision.models import resnet18
@@ -29,6 +28,8 @@ from torchvision.transforms import Normalize, Resize, ToTensor
 
 from data_preprocessing.data_split import Run_Split
 from utils.util import ensure_dir, prepare_device, notification
+from model.model import resnet_finetune
+from model.metric import batch_acc, batch_loss, batch_f1, epoch_mean
 
 
 random_seed = 12
@@ -41,33 +42,7 @@ np.random.seed(random_seed)
 random.seed(random_seed)
 
 
-def resnet_finetune(model, classes):
-    model = model(pretrained=True)
-    # for params in model.parameters():
-    #     params.requires_grad = False
-    # model.fc = nn.Linear(in_features=512, out_features=classes, bias=True)
 
-    # print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
-    # print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc.weight.shape[0])
-
-    # torch.nn.init.xavier_uniform_(model.fc.weight)
-    # stdv = 1.0 / math.sqrt(model.fc.weight.size(1))
-    # model.fc.bias.data.uniform_(-stdv, stdv)
-
-    model.fc = nn.Linear(in_features=2048, out_features=512, bias=True)
-    model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    model.relu = nn.ReLU(inplace=True)
-    model.dropout = nn.Dropout(p=0.2)
-    model.fc2= nn.Linear(in_features=512, out_features=classes, bias=True)
-
-    print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
-    print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc2.weight.shape[0])
-
-    torch.nn.init.xavier_uniform_(model.fc2.weight)
-    stdv = 1.0 / math.sqrt(model.fc2.weight.size(1))
-    model.fc2.bias.data.uniform_(-stdv, stdv)
-
-    return model
 
 
 def collate_fn(batch):
@@ -141,7 +116,7 @@ if __name__ == "__main__":
     data_transform = transforms.Compose(
         [
             Resize((512, 384), Image.BILINEAR),
-            GaussianBlur(7, sigma=(0.1, 2)),
+            # GaussianBlur(3, sigma=(0.1, 2)),
             RandomRotation([-8, +8]),
             ToTensor(),
             Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
@@ -201,14 +176,14 @@ if __name__ == "__main__":
         # early_ind = 0
         # pred_f1 = 0.0
         for epoch in range(NUM_EPOCH):
-            epoch_f1 = 0
-            n_iter = 0
-
             # if not (flag):
             #     break
             for phase in ["train", "test"]:
                 running_loss = 0.0
                 running_acc = 0.0
+                running_f1 = 0.0
+
+
                 if phase == "train":
                     mnist_resnet.train()  # 네트워크 모델을 train 모드로 두어 gradient을 계산하고, 여러 sub module (배치 정규화, 드롭아웃 등)이 train mode로 작동할 수 있도록 함
                 elif phase == "test":
@@ -234,19 +209,16 @@ if __name__ == "__main__":
                             loss.backward()  # 모델의 예측 값과 실제 값의 CrossEntropy 차이를 통해 gradient 계산
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
 
-                    running_loss += loss.item() * images.size(0)  # 한 Batch에서의 loss 값 저장
-                    running_acc += torch.sum(
-                        preds == labels.data
-                    )  # 한 Batch에서의 Accuracy 값 저장
-                    epoch_f1 += f1_score(
-                        preds.cpu().numpy(), labels.cpu().numpy(), average="macro"
-                    )
-                    n_iter += 1
+                    
+                    running_loss += batch_loss(loss, images) # 한 Batch에서의 loss 값 저장
+                    running_acc += batch_acc(preds, labels.data) # 한 Batch에서의 Accuracy 값 저장
+                    running_f1 = batch_f1(preds.cpu().numpy(), labels.cpu().numpy(), 'macro')
 
                 # 한 epoch이 모두 종료되었을 때,
-                epoch_loss = running_loss / len(dataloaders[phase].dataset)
-                epoch_acc = running_acc / len(dataloaders[phase].dataset)
-                epoch_f1 = epoch_f1 / n_iter
+                data_len = len(dataloaders[phase].dataset)
+                epoch_loss = epoch_mean(running_loss, data_len)
+                epoch_acc = epoch_mean(running_acc, data_len)
+                epoch_f1 = epoch_mean(running_f1, data_len)
 
                 print(
                     f"현재 epoch-{epoch}의 {phase}-데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}, F1 Score : {epoch_f1:.3f}"

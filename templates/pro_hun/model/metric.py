@@ -1,20 +1,22 @@
 import torch
+from sklearn.metrics import f1_score
 
 
-def accuracy(output, target):
-    with torch.no_grad():
-        pred = torch.argmax(output, dim=1)
-        assert pred.shape[0] == len(target)
-        correct = 0
-        correct += torch.sum(pred == target).item()
-    return correct / len(target)
+# 한 Batch에서의 Accuracy 값
+def batch_acc(pred, label):
+    return torch.sum(pred == label)
 
 
-def top_k_acc(output, target, k=3):
-    with torch.no_grad():
-        pred = torch.topk(output, k, dim=1)[1]
-        assert pred.shape[0] == len(target)
-        correct = 0
-        for i in range(k):
-            correct += torch.sum(pred[:, i] == target).item()
-    return correct / len(target)
+# 한 Batch에서의 loss 값
+def batch_loss(loss, images):
+    return loss.item()*images.size(0)
+
+
+# 한 Batch에서의 f1_score 값
+def batch_f1(pred, label, method):
+    return f1_score(pred, label, average=method)
+
+
+# Epoch당 평균값 반환
+def epoch_mean(val, len):
+    return val/len
