@@ -2,6 +2,8 @@ import datetime as dt
 import os
 import random
 import time
+import argparse
+
 
 import cv2
 import albumentations
@@ -54,7 +56,15 @@ class TestDataset(Dataset):
 
 
 if __name__ == "__main__":
-    test_dir = "/opt/ml/image-classification-level1-12/templates/data/eval"
+    args = argparse.ArgumentParser(description='PyTorch Template')
+    args.add_argument('--test_path', default="/opt/ml/image-classification-level1-12/templates/data/eval", type=str, help='test_path')
+    args.add_argument('--result_save', default="/opt/ml/image-classification-level1-12/templates/pro_hun/output/sub", type=str, help='result_save_path')
+    args.add_argument('--normalize_mean', default=(0.5601, 0.5241, 0.5014), type=float, help='Normalize mean value')
+    args.add_argument('--normalize_std', default=(0.2331, 0.2430, 0.2456), type=float, help='Normalize std value')
+
+    args = args.parse_args()
+
+    test_dir = args.test_path
     submission = pd.read_csv(os.path.join(test_dir, "info.csv"))
     image_dir = os.path.join(test_dir, "images")
 
@@ -68,7 +78,7 @@ if __name__ == "__main__":
         [
             Resize((512, 384), Image.BILINEAR),
             ToTensor(),
-            Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+            Normalize(mean=args.normalize_mean, std=args.normalize_std),
         ]
     )
 
@@ -87,6 +97,8 @@ if __name__ == "__main__":
 
     # model_path = '/opt/ml/image-classification-level1-12/templates/pro_hun/output/model/model_2021-08-25_004053'
     model_path = input("학습한 모델의 경로를 입력해주세요 : ")
+
+    
     model_listdir = os.listdir(model_path)
     all_predictions = [[] for _ in range(len(loader))]
     for moli in model_listdir:
@@ -117,11 +129,6 @@ if __name__ == "__main__":
     submission["ans"] = all_predictions
 
     # 제출할 파일을 저장합니다.
-    now = (
-        dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
-    )
-    submission.to_csv(
-        f"/opt/ml/image-classification-level1-12/templates/pro_hun/output/sub/sub_{now}.csv",
-        index=False,
-    )
+    now = (dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S"))
+    submission.to_csv(os.path.join(args.result_save, f'sub_{now}.csv'))
     print("test inference is done!")
