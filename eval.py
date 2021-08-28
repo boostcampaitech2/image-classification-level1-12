@@ -36,7 +36,7 @@ def main(config):
     # define image transform
     eval_transform = transforms.Compose([
         # transforms.Scale(244),
-        transforms.CenterCrop(244),
+        transforms.CenterCrop((384, 288)),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
@@ -49,7 +49,7 @@ def main(config):
     eval_data_loader = DataLoader(eval_dataset,
                                   batch_size=64,
                                   shuffle=False,
-                                  num_workers=8)
+                                  num_workers=4)
 
     # build model architecture
     model = MaskModel()
@@ -59,7 +59,7 @@ def main(config):
     loss_fn = MaskLoss()
     metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
-    checkpoint_file_path = "/tmp/pycharm_project_862/saved/models/Mask_vgg19_lin2//0827_130810/checkpoint-epoch3.pth"
+    checkpoint_file_path = "/tmp/pycharm_project_862/saved/models/Mask_vgg19_lin2/0828_133524/checkpoint-epoch8.pth"
     logger.info('Loading checkpoint: {} ...'.format(checkpoint_file_path))
     checkpoint = torch.load(checkpoint_file_path)
     state_dict = checkpoint['state_dict']
@@ -83,7 +83,7 @@ def main(config):
     # 제출할 파일을 저장합니다.
     submission = pd.read_csv("/opt/ml/mask_data/eval/info.csv")
     submission['ans'] = all_predictions
-    submission.to_csv('./saved/submission/submission_0827_130810.csv', index=False)
+    submission.to_csv('./saved/submission/submission_0828_133524_8.csv', index=False)
     # epoch: 3
     # loss: 0.2146139108273299
     # mask_total_accuracy: 0.9237868785858154

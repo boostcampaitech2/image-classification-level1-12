@@ -32,15 +32,15 @@ def main(config):
     # define image transform
     train_transform = transforms.Compose([
         # transforms.Scale(244),
-        transforms.CenterCrop(244),
+        transforms.CenterCrop((384, 288)),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
     valid_transform = transforms.Compose([
         # transforms.Scale(244),
-        transforms.CenterCrop(244),
-        # transforms.RandomHorizontalFlip(p=0.5),
+        transforms.CenterCrop((384, 288)),
+        transforms.RandomHorizontalFlip(p=0.5),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
@@ -51,23 +51,23 @@ def main(config):
     train_dataset = MaskDataset("/opt/ml/mask_data",
                                 train=True,
                                 num_folds=5,
-                                folds=[0, 1, 2, 3],
+                                folds=[1, 2, 3, 4],
                                 transform=train_transform
                                 )
     valid_dataset = MaskDataset("/opt/ml/mask_data",
                                 train=True,
                                 num_folds=5,
-                                folds=[4],
+                                folds=[0],
                                 transform=valid_transform
                                 )
     train_data_loader = DataLoader(train_dataset,
                                    batch_size=64,
                                    shuffle=True,
-                                   num_workers=8)
+                                   num_workers=4)
     valid_data_loader = DataLoader(valid_dataset,
                                    batch_size=64,
                                    shuffle=True,
-                                   num_workers=8)
+                                   num_workers=4)
 
 
 
@@ -91,8 +91,8 @@ def main(config):
     mask_weight = None
     gender_weight = None
     # age_weight = torch.tensor([1.4, 1., 6.1]).to(device)
-    # age_weight = torch.tensor([1.2, 1., 3.4]).to(device)
-    age_weight = torch.tensor([1.2, 1., 6]).to(device)
+    age_weight = torch.tensor([1.2, 1., 3.4]).to(device)
+    # age_weight = torch.tensor([1.2, 1., 6]).to(device)
     criterion = MaskLoss(
                     mask_weight=mask_weight,
                     gender_weight=gender_weight,
