@@ -1,3 +1,4 @@
+import argparse
 import os
 import random
 import shutil
@@ -6,8 +7,6 @@ import numpy as np
 import pandas as pd
 import tqdm
 from sklearn.model_selection import StratifiedKFold
-import argparse
-
 from utils.util import ensure_dir
 
 random_seed = 12
@@ -43,20 +42,28 @@ class Run_Split:
         y = train_label["label"]
 
         train_list, val_list = [], []
-        
-        for train_idx, val_idx in KFold.split(X, y):
-            train_list.append(train_label[train_label.index.isin(X[train_idx])].reset_index(drop=True))
-            val_list.append(train_label[train_label.index.isin(X[val_idx])].reset_index(drop=True))
 
+        for train_idx, val_idx in KFold.split(X, y):
+            train_list.append(
+                train_label[train_label.index.isin(X[train_idx])].reset_index(drop=True)
+            )
+            val_list.append(
+                train_label[train_label.index.isin(X[val_idx])].reset_index(drop=True)
+            )
 
         return train_list, val_list
 
 
 if __name__ == "__main__":
-    args = argparse.ArgumentParser(description='PyTorch Template')
-    args.add_argument('--train_path', default="/opt/ml/image-classification-level1-12/templates/data/train", type=str, help='train_path')
-    args.add_argument('--fold_num', default=5, type=int, help='kfold_num')
-    
+    args = argparse.ArgumentParser(description="PyTorch Template")
+    args.add_argument(
+        "--train_path",
+        default="/opt/ml/image-classification-level1-12/templates/data/train",
+        type=str,
+        help="train_path",
+    )
+    args.add_argument("--fold_num", default=5, type=int, help="kfold_num")
+
     args = args.parse_args()
 
     train_path = args.train_path
