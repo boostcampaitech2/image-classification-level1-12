@@ -1,7 +1,7 @@
 from torch import torch
 import datetime
 import numpy as np
-from train import sub_session, train_session
+from train import sub_session, train_session, fit_session
 
 
 if __name__ == '__main__':
@@ -21,13 +21,14 @@ if __name__ == '__main__':
     lr = 1e-5
     cv_num = 3
     freeze = False
-    debug = False
+    debug = True
     addition = 'VIT'
 
     print(f'\nDEBUG: {debug}')
     print(f'estimated end time: {datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))) + datetime.timedelta(minutes=10*(epoch*cv_num + 1) + 3)}')
 
-    model = train_session(epoch, batch_size, lr, debug)
+    train_session(epoch, batch_size, lr, debug)
+    model = fit_session(epoch, batch_size, lr, debug)
     torch.save(model.state_dict(), '/opt/ml/repos/VIT-base/result/model.pt')
 
     result = sub_session(model, epoch, batch_size, debug)

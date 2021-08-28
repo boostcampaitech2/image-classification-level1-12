@@ -82,7 +82,7 @@ def labeler(dir_list, gender_map = {'female': 1, 'male': 0}):
     return labels
 
 
-class CV(object):
+class stratified_CV(object):
     def __init__(self, dirs: list, labels: list, fold_num: int, sort = True):
         self.current = 0
         self.maxfold = fold_num
