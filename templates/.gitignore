@@ -26,6 +26,7 @@ wheels/
 *.egg
 pro_hun/output/**
 **/MY_FONT/**
+**/MY_FONT.zip
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
