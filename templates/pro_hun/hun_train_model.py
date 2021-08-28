@@ -5,6 +5,8 @@ import random
 import time
 from functools import partial
 from pathlib import Path
+import argparse
+
 
 import cv2
 import albumentations
@@ -100,6 +102,15 @@ if __name__ == "__main__":
     print(f"{device} is using!")
 
 
+    args = argparse.ArgumentParser(description='PyTorch Template')
+    args.add_argument('-lr', '--learning_rate', default=0.0001, type=float, help='learning rate for training')
+    args.add_argument('-bs', '--batch_size', default=128, type=int, help='batch size for training')
+    args.add_argument('--epoch', default=10, type=int, help='training epoch size')
+
+
+
+
+
     # data_transform = albumentations.Compose([
     #     albumentations.Resize(512, 384, cv2.INTER_LINEAR),
     #     albumentations.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
@@ -125,9 +136,6 @@ if __name__ == "__main__":
     )
     
 
-    LEARNING_RATE = 0.0001  # 학습 때 사용하는 optimizer의 학습률 옵션 설정
-    NUM_EPOCH = 10  # 학습 때 mnist train 데이터 셋을 얼마나 많이 학습할지 결정하는 옵션
-
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
     )
@@ -145,13 +153,13 @@ if __name__ == "__main__":
             torch.nn.CrossEntropyLoss()
         )  # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
         optimizer = torch.optim.Adam(
-            mnist_resnet.parameters(), lr=LEARNING_RATE
+            mnist_resnet.parameters(), lr=args.learning_rate
         )  # weight 업데이트를 위한 optimizer를 Adam으로 사용함
 
         train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i])
         train_loader = DataLoader(
             train_dataset,
-            batch_size=128,
+            batch_size=args.batch_size,
             # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
@@ -161,7 +169,7 @@ if __name__ == "__main__":
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i])
         val_loader = DataLoader(
             val_dataset,
-            batch_size=128,
+            batch_size=args.batch_size,
             collate_fn=collate_fn,
             drop_last=False,
             #  num_workers=2
@@ -176,7 +184,7 @@ if __name__ == "__main__":
         # flag = True
         # early_ind = 0
         # pred_f1 = 0.0
-        for epoch in range(NUM_EPOCH):
+        for epoch in range(args.epoch):
             # if not (flag):
             #     break
             for phase in ["train", "test"]:
@@ -254,3 +262,5 @@ if __name__ == "__main__":
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
     notification(best_test_accuracy)
+
+
