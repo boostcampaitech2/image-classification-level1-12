@@ -80,3 +80,41 @@ def labeler(dir_list, gender_map = {'female': 1, 'male': 0}):
         labels.append(to_label(mask_label, age_label, gender_label))
 
     return labels
+
+
+class CV(object):
+    def __init__(self, dirs: list, labels: list, fold_num: int, sort = True):
+        self.current = 0
+        self.maxfold = fold_num
+
+        self.kf = StratifiedKFold(dirs, labels, n_splits = fold_num)
+        self.fold_index = []  #list of train_valid_test
+
+        if sort:
+            self.dirs = sorted(dirs)
+        else: 
+            self.dirs = dirs
+
+        for train_index, test_index in self.kf.split(dirs):
+            split = len(test_index)//2 - 1
+            valid_index = test_index[:split]
+            test_index = test_index[split:]
+            self.fold_index.append([train_index, valid_index, test_index])
+
+
+    def __iter__(self):
+        return self
+
+
+    def __next__(self):
+        #gives next fold
+        if self.current >= self.maxfold:
+            raise StopIteration
+        else:
+            train_id, valid_id, test_id = self.fold_index[self.current]
+            train = [self.dirs[idx] for idx in train_id]
+            valid = [self.dirs[idx] for idx in valid_id]
+            test = [self.dirs[idx] for idx in test_id]
+            self.current += 1
+
+            return [train, valid, test]
