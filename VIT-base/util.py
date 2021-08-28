@@ -87,7 +87,7 @@ class stratified_CV(object):
         self.current = 0
         self.maxfold = fold_num
 
-        self.kf = StratifiedKFold(dirs, labels, n_splits = fold_num)
+        self.kf = StratifiedKFold(n_splits = fold_num, shuffle=True)
         self.fold_index = []  #list of train_valid_test
 
         if sort:
@@ -95,7 +95,7 @@ class stratified_CV(object):
         else: 
             self.dirs = dirs
 
-        for train_index, test_index in self.kf.split(dirs):
+        for train_index, test_index in self.kf.split(dirs, labels):
             split = len(test_index)//2 - 1
             valid_index = test_index[:split]
             test_index = test_index[split:]

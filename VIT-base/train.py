@@ -18,7 +18,7 @@ def sub_session(model, epoch, batch_size, debug):
     SUB_DATA_ROOT = '/opt/ml/input/data/eval/'
     sub_meta = pd.read_csv(os.path.join(SUB_DATA_ROOT, 'info.csv'), nrows = 100 if debug else None)
     sub_dir_list = dirlister(SUB_DATA_ROOT, sub_meta, mode = 'sub')
-    sub_dataloader = MaskDataLoader(MaskDataset(sub_dir_list, mode = 'sub'), batch_size, collate_fn=sub_collate_fn)
+    sub_dataloader = MaskDataLoader(MaskDataset(sub_dir_list, mode = 'sub', shuffle = False), batch_size, collate_fn=sub_collate_fn)
 
     labels = []
     with torch.no_grad():
@@ -81,13 +81,12 @@ def fit_session(epoch, batch_size, lr, debug):
     train_dir_list = dirlister(TRAIN_DATA_ROOT, train_meta, mode = 'train')
     
     criterion = FocalLoss()
-    full_dataset = MaskDataset(train_dir_list, mode = 'train', shuffle = False)
-    full_dataloader = MaskDataLoader(full_dataset, batch_size, collate_fn)
+    full_dataset = MaskDataset(train_dir_list, mode = 'train')
+    full_dataloader = MaskDataLoader(full_dataset, batch_size, collate_fn=collate_fn)
     model = vision_transformer().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     for e in range(epoch):
-        print(f'    --epoch {e + 1}/{epoch}--')
         model.train()
         torch.cuda.empty_cache()
         model, _loss, _metric = trainer(model, full_dataloader, batch_size, 'train', criterion, optimizer, device)
@@ -95,7 +94,7 @@ def fit_session(epoch, batch_size, lr, debug):
     return model
 
 
-def train_session(epoch, batch_size, lr, debug)->None:
+def train_session(epoch, batch_size, lr, debug, cv_num)->None:
     TRAIN_DATA_ROOT = '/opt/ml/input/data/train/'
     device = torch.device('cuda:0' if torch.cuda.device_count() > 0 else 'cpu')
     train_meta = pd.read_csv(os.path.join(TRAIN_DATA_ROOT, 'train.csv'), nrows = 100 if debug else None)
@@ -105,7 +104,7 @@ def train_session(epoch, batch_size, lr, debug)->None:
     full_dataset = MaskDataset(train_dir_list, mode = 'train', shuffle = False)
 
     total_loss, total_metric = [], []
-    for idx, (train, valid, test) in enumerate(stratified_CV(full_dataset.dir_list, full_dataset.label, 5)):
+    for idx, (train, valid, test) in enumerate(stratified_CV(full_dataset.dir_list, full_dataset.label, cv_num)):
 
         model = vision_transformer().to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)

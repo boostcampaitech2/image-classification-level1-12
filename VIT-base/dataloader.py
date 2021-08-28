@@ -18,7 +18,7 @@ class MaskDataset(Dataset):
         self.dir_list = dir_list
 
         if shuffle == True:
-            random.shuffle(self.dir_list)
+            random.shuffle(dir_list)
         
         self.label = []
         for dir in tqdm.tqdm(self.dir_list, leave=False, desc = '    creating dataset: '):
