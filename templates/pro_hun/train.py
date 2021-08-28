@@ -146,7 +146,7 @@ if __name__ == "__main__":
     data_transform = transforms.Compose(
         [
             Resize((512, 384), Image.BILINEAR),
-            GaussianBlur(3, sigma=(0.1, 2)),
+            # GaussianBlur(3, sigma=(0.1, 2)),
             # RandomRotation([-8, +8]),
             ToTensor(),
             Normalize(mean=args.normalize_mean, std=args.normalize_std),
@@ -197,16 +197,15 @@ if __name__ == "__main__":
 
         # flag = True
         # early_ind = 0
-        # pred_f1 = 0.0
+        pred_f1 = 0.0
         for epoch in range(args.epoch):
-            n_iter = 0
             # if not (flag):
             #     break
             for phase in ["train", "test"]:
+                n_iter = 0
                 running_loss = 0.0
                 running_acc = 0.0
                 running_f1 = 0.0
-                n_iter += 1
 
                 if phase == "train":
                     mnist_resnet.train()  # 네트워크 모델을 train 모드로 두어 gradient을 계산하고, 여러 sub module (배치 정규화, 드롭아웃 등)이 train mode로 작동할 수 있도록 함
@@ -239,8 +238,10 @@ if __name__ == "__main__":
                         preds, labels.data
                     )  # 한 Batch에서의 Accuracy 값 저장
                     running_f1 += batch_f1(
-                        preds.cpu().numpy(), labels.cpu().numpy(), "macro"
+                        preds.cpu().numpy(), labels.cpu().numpy(), average="macro"
                     )
+                    n_iter += 1
+
 
                 # 한 epoch이 모두 종료되었을 때,
                 data_len = len(dataloaders[phase].dataset)
@@ -261,19 +262,19 @@ if __name__ == "__main__":
                     best_test_loss = epoch_loss
 
                 # Early Stopping Code
-                # if phase == "test":
-                #     if pred_f1 <= epoch_f1:
-                #         pred_f1 = epoch_f1
-                #         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
-                #         print(f"{epoch}번째 모델 저장!")
-                #         early_ind = 0
-                #     else:
-                #         print(f"{epoch}번째 모델 pass")
+                if phase == "test":
+                    if pred_f1 <= epoch_f1:
+                        pred_f1 = epoch_f1
+                        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
+                        print(f"{epoch}번째 모델 저장!")
+                        early_ind = 0
+                    else:
+                        print(f"{epoch}번째 모델 pass")
                 # early_ind += 1
                 # if early_ind == 2:
                 #     flag = False
                 #     break
-        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
+        # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
     # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
