@@ -238,7 +238,7 @@ if __name__ == "__main__":
                         preds, labels.data
                     )  # 한 Batch에서의 Accuracy 값 저장
                     running_f1 += batch_f1(
-                        preds.cpu().numpy(), labels.cpu().numpy(), average="macro"
+                        preds.cpu().numpy(), labels.cpu().numpy(), "macro"
                     )
                     n_iter += 1
 
