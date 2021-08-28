@@ -52,10 +52,16 @@ class Run_Split:
 
 
 if __name__ == "__main__":
-    train_path = "/opt/ml/image-classification-level1-12/templates/data/train"
+    args = argparse.ArgumentParser(description='PyTorch Template')
+    args.add_argument('--train_path', default="/opt/ml/image-classification-level1-12/templates/data/train", type=str, help='train_path')
+    args.add_argument('--fold_num', default=5, type=int, help='kfold_num')
+    
+    args = args.parse_args()
+
+    train_path = args.train_path
     train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
     run_train = Run_Split(os.path.join(train_path, "image_all"))
-    fold_num = 5
+    fold_num = args.fold_num
     train_list, val_list = run_train.train_val_split(train_label, fold_num)
 
     for i in tqdm.tqdm(range(fold_num)):
