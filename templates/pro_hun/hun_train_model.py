@@ -29,7 +29,8 @@ from torchvision.transforms import Normalize, Resize, ToTensor
 from data_preprocessing.data_split import Run_Split
 from utils.util import ensure_dir, prepare_device, notification
 from model.model import resnet_finetune
-from model.metric import batch_acc, batch_loss, batch_f1, epoch_mean
+from model.metric import batch_acc, batch_f1, epoch_mean
+from model.loss import batch_loss
 
 
 random_seed = 12
