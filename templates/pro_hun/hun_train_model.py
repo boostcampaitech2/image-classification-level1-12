@@ -106,6 +106,8 @@ if __name__ == "__main__":
     args.add_argument('-lr', '--learning_rate', default=0.0001, type=float, help='learning rate for training')
     args.add_argument('-bs', '--batch_size', default=128, type=int, help='batch size for training')
     args.add_argument('--epoch', default=10, type=int, help='training epoch size')
+    
+    args = args.parse_args()
 
 
 
