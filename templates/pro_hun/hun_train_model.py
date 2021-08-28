@@ -124,8 +124,8 @@ if __name__ == "__main__":
     data_transform = transforms.Compose(
         [
             Resize((512, 384), Image.BILINEAR),
-            # GaussianBlur(3, sigma=(0.1, 2)),
-            RandomRotation([-8, +8]),
+            GaussianBlur(3, sigma=(0.1, 2)),
+            # RandomRotation([-8, +8]),
             ToTensor(),
             Normalize(mean=args.normalize_mean, std=args.normalize_std),
         ]
@@ -211,7 +211,7 @@ if __name__ == "__main__":
                     
                     running_loss += batch_loss(loss, images) # 한 Batch에서의 loss 값 저장
                     running_acc += batch_acc(preds, labels.data) # 한 Batch에서의 Accuracy 값 저장
-                    running_f1 = batch_f1(preds.cpu().numpy(), labels.cpu().numpy(), 'macro')
+                    running_f1 += batch_f1(preds.cpu().numpy(), labels.cpu().numpy(), 'macro')
 
                 # 한 epoch이 모두 종료되었을 때,
                 data_len = len(dataloaders[phase].dataset)
