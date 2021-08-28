@@ -141,7 +141,7 @@ if __name__ == "__main__":
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
     )
-    model_save_path = "/opt/ml/image-classification-level1-12/templates/pro_hun/output/model"
+    model_save_path = "/opt/ml/image-classification-level1-12/templates/pro_hun/output/model_save"
     dirname = os.path.join(model_save_path, f"model_{now}")
     ensure_dir(dirname)
 
