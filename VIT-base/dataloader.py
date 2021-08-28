@@ -69,8 +69,8 @@ def collate_fn(batch):
     transform = transforms.Compose([
         transforms.CenterCrop(384),
         transforms.ToTensor(), 
-        transforms.RandomVerticalFlip(p = 0.3),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        transforms.RandomHorizontalFlip(p = 0.3),
+        transforms.Normalize(mean=0.5, std=0.5)])
     #(0.1**0.5)*torch.randn(5, 10, 20): noise tensor
     img_list, labels = [], []
     for dir, label in batch:
@@ -87,7 +87,7 @@ def test_collate_fn(batch):
     transform = transforms.Compose([
         transforms.ToTensor(), 
         transforms.CenterCrop(384),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        transforms.Normalize(mean=0.5, std=0.5)])
     
     img_list, labels = [], []
     for dir, label in batch:
@@ -102,7 +102,7 @@ def sub_collate_fn(batch):
     transform = transforms.Compose([
         transforms.ToTensor(), 
         transforms.CenterCrop(384),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        transforms.Normalize(mean=0.5, std=0.5)])
     img_list = []
     for dir in batch:
         img_list.append(transform(PIL.Image.open(dir)))

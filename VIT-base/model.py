@@ -11,7 +11,7 @@ class vision_transformer(nn.Module):
     """
     def __init__(self, n_classes:int = 18):
         super().__init__()
-        self.backbone = self.backbone = ViT('B_16_imagenet1k', pretrained=True)
+        self.backbone = self.backbone = ViT('L_32_imagenet1k', pretrained=True)
         self.backbone.fc = nn.Linear(768, n_classes, bias = True)
 
     def forward(self, x):
