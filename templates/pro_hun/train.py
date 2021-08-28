@@ -1,3 +1,4 @@
+import argparse
 import datetime as dt
 import math
 import os
@@ -5,35 +6,31 @@ import random
 import time
 from functools import partial
 from pathlib import Path
-import argparse
 
-
-import cv2
 import albumentations
 import albumentations.pytorch
-
+import cv2
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
-from torchvision.models.resnet import resnet152, resnet50
-from torchvision.transforms.transforms import GaussianBlur, RandomRotation
 import tqdm
 from PIL import Image
 from pytz import timezone
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 from torchvision.models import resnet18
+from torchvision.models.resnet import resnet50, resnet152
 from torchvision.transforms import Normalize, Resize, ToTensor
+from torchvision.transforms.transforms import GaussianBlur, RandomRotation
 
 from data_preprocessing.data_split import Run_Split
-from utils.util import ensure_dir, prepare_device, notification
-from model.model import resnet_finetune
-from model.metric import batch_acc, batch_f1, epoch_mean
 from model.loss import batch_loss
-
+from model.metric import batch_acc, batch_f1, epoch_mean
+from model.model import resnet_finetune
+from utils.util import ensure_dir, notification, prepare_device
 
 random_seed = 12
 torch.manual_seed(random_seed)
@@ -50,18 +47,19 @@ class Mask_Dataset(object):
         self.transforms = transforms
         self.name = name
         self.path = path
-        self.imgs = sorted(os.listdir(os.path.join(self.path, f'image_all/{self.name}_image')))
+        self.imgs = sorted(
+            os.listdir(os.path.join(self.path, f"image_all/{self.name}_image"))
+        )
         self.df = df
-
 
     def __getitem__(self, idx):
         # img_path = Path(self.df["path"][idx])
         img_path = self.df["path"][idx]
         target = self.df["label"][idx]
-        
+
         # img = cv2.imread(img_path)
         # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        
+
         # if self.transforms is not None:
         #     augmented = self.transforms(image = img)
         #     img = augmented['image']
@@ -70,9 +68,8 @@ class Mask_Dataset(object):
 
         if self.transforms is not None:
             img = self.transforms(img)
-                
+
         return img, target
-        
 
     def __len__(self):
         return len(self.imgs)
@@ -83,18 +80,45 @@ def collate_fn(batch):
 
 
 if __name__ == "__main__":
-    args = argparse.ArgumentParser(description='PyTorch Template')
-    args.add_argument('-lr', '--learning_rate', default=0.0001, type=float, help='learning rate for training')
-    args.add_argument('-bs', '--batch_size', default=128, type=int, help='batch size for training')
-    args.add_argument('--epoch', default=10, type=int, help='training epoch size')
-    args.add_argument('--fold_size', default=5, type=int, help='StratifiedKFold size')
-    args.add_argument('--train_path', default="/opt/ml/image-classification-level1-12/templates/data/train", type=str, help='train_path')
-    args.add_argument('--model_save', default="/opt/ml/image-classification-level1-12/templates/pro_hun/output/model_save", type=str, help='model_save_path')
-    args.add_argument('--normalize_mean', default=(0.5601, 0.5241, 0.5014), type=float, help='Normalize mean value')
-    args.add_argument('--normalize_std', default=(0.2331, 0.2430, 0.2456), type=float, help='Normalize std value')
+    args = argparse.ArgumentParser(description="PyTorch Template")
+    args.add_argument(
+        "-lr",
+        "--learning_rate",
+        default=0.0001,
+        type=float,
+        help="learning rate for training",
+    )
+    args.add_argument(
+        "-bs", "--batch_size", default=128, type=int, help="batch size for training"
+    )
+    args.add_argument("--epoch", default=10, type=int, help="training epoch size")
+    args.add_argument("--fold_size", default=5, type=int, help="StratifiedKFold size")
+    args.add_argument(
+        "--train_path",
+        default="/opt/ml/image-classification-level1-12/templates/data/train",
+        type=str,
+        help="train_path",
+    )
+    args.add_argument(
+        "--model_save",
+        default="/opt/ml/image-classification-level1-12/templates/pro_hun/output/model_save",
+        type=str,
+        help="model_save_path",
+    )
+    args.add_argument(
+        "--normalize_mean",
+        default=(0.5601, 0.5241, 0.5014),
+        type=float,
+        help="Normalize mean value",
+    )
+    args.add_argument(
+        "--normalize_std",
+        default=(0.2331, 0.2430, 0.2456),
+        type=float,
+        help="Normalize std value",
+    )
 
     args = args.parse_args()
-
 
     train_path = args.train_path
     train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
@@ -106,20 +130,18 @@ if __name__ == "__main__":
     device = prepare_device()
     print(f"{device} is using!")
 
-
     # data_transform = albumentations.Compose([
     #     albumentations.Resize(512, 384, cv2.INTER_LINEAR),
     #     albumentations.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
     #     albumentations.OneOf([
-	# 		albumentations.HorizontalFlip(p=1),
-	# 		albumentations.Rotate([-10, 10], p=1),
+    # 		albumentations.HorizontalFlip(p=1),
+    # 		albumentations.Rotate([-10, 10], p=1),
     #     ], p=0.5),
     #     albumentations.pytorch.transforms.ToTensorV2(),
     #     # albumentations.RandomCrop(224, 224),
     #     # albumentations.RamdomCrop, CenterCrop, RandomRotation
     #     # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
     # ])
-
 
     data_transform = transforms.Compose(
         [
@@ -130,25 +152,27 @@ if __name__ == "__main__":
             Normalize(mean=args.normalize_mean, std=args.normalize_std),
         ]
     )
-    
 
-    now = dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
+    now = (
+        dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
+    )
     model_save_path = args.model_save
     dirname = os.path.join(model_save_path, f"model_{now}")
     ensure_dir(dirname)
 
-
     st_time = time.time()
     for i in range(fold_num):
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
-        mnist_resnet = resnet_finetune(resnet18, 18).to(device)  
+        mnist_resnet = resnet_finetune(resnet18, 18).to(device)
 
         # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
         loss_fn = torch.nn.CrossEntropyLoss()
         # weight 업데이트를 위한 optimizer를 Adam으로 사용함
-        optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)  
+        optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
 
-        train_dataset = Mask_Dataset(data_transform, f"train{i}", train_list[i], train_path)
+        train_dataset = Mask_Dataset(
+            data_transform, f"train{i}", train_list[i], train_path
+        )
         train_loader = DataLoader(
             train_dataset,
             batch_size=args.batch_size,
@@ -184,14 +208,14 @@ if __name__ == "__main__":
                 running_f1 = 0.0
                 n_iter += 1
 
-
                 if phase == "train":
                     mnist_resnet.train()  # 네트워크 모델을 train 모드로 두어 gradient을 계산하고, 여러 sub module (배치 정규화, 드롭아웃 등)이 train mode로 작동할 수 있도록 함
                 elif phase == "test":
                     mnist_resnet.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
 
-
-                for ind, (images, labels) in enumerate(tqdm.tqdm(dataloaders[phase], leave=False)):
+                for ind, (images, labels) in enumerate(
+                    tqdm.tqdm(dataloaders[phase], leave=False)
+                ):
                     images = torch.stack(list(images), dim=0).to(device)
                     labels = torch.tensor(list(labels)).to(device)
 
@@ -210,10 +234,13 @@ if __name__ == "__main__":
                             loss.backward()  # 모델의 예측 값과 실제 값의 CrossEntropy 차이를 통해 gradient 계산
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
 
-                    
-                    running_loss += batch_loss(loss, images) # 한 Batch에서의 loss 값 저장
-                    running_acc += batch_acc(preds, labels.data) # 한 Batch에서의 Accuracy 값 저장
-                    running_f1 += batch_f1(preds.cpu().numpy(), labels.cpu().numpy(), 'macro')
+                    running_loss += batch_loss(loss, images)  # 한 Batch에서의 loss 값 저장
+                    running_acc += batch_acc(
+                        preds, labels.data
+                    )  # 한 Batch에서의 Accuracy 값 저장
+                    running_f1 += batch_f1(
+                        preds.cpu().numpy(), labels.cpu().numpy(), "macro"
+                    )
 
                 # 한 epoch이 모두 종료되었을 때,
                 data_len = len(dataloaders[phase].dataset)
@@ -242,10 +269,10 @@ if __name__ == "__main__":
                 #         early_ind = 0
                 #     else:
                 #         print(f"{epoch}번째 모델 pass")
-                        # early_ind += 1
-                        # if early_ind == 2:
-                        #     flag = False
-                        #     break
+                # early_ind += 1
+                # if early_ind == 2:
+                #     flag = False
+                #     break
         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
@@ -254,5 +281,3 @@ if __name__ == "__main__":
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
     notification(best_test_accuracy)
-
-

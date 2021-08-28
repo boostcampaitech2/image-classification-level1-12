@@ -1,5 +1,6 @@
-import torch.nn as nn
 import math
+
+import torch.nn as nn
 
 
 def resnet_finetune(model, classes):
@@ -21,10 +22,12 @@ def resnet_finetune(model, classes):
     # model.fc.bias.data.uniform_(-stdv, stdv)
 
     model.fc = nn.Linear(in_features=512, out_features=128, bias=True)
-    model.bc = nn.BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    model.bc = nn.BatchNorm2d(
+        128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True
+    )
     model.relu = nn.ReLU(inplace=True)
     model.dropout = nn.Dropout(p=0.2)
-    model.fc2= nn.Linear(in_features=128, out_features=classes, bias=True)
+    model.fc2 = nn.Linear(in_features=128, out_features=classes, bias=True)
 
     print("네트워크 필요 입력 채널 개수", model.conv1.weight.shape[1])
     print("네트워크 출력 채널 개수 (예측 class type 개수)", model.fc2.weight.shape[0])

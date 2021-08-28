@@ -14,4 +14,4 @@ def batch_f1(pred, label, method):
 
 # Epoch당 평균값 반환
 def epoch_mean(val, len):
-    return val/len
+    return val / len
