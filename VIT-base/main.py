@@ -33,5 +33,5 @@ if __name__ == '__main__':
     result = sub_session(model, epoch, batch_size, debug)
     result.to_csv('/opt/ml/repos/VIT-base/result/submission.csv')
 
-    print('done')
+    print('done ')
     
