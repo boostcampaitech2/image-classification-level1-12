@@ -78,12 +78,13 @@ if __name__ == "__main__":
         type=float,
         help="Normalize std value",
     )
+    args.add_argument("--image_dir", default="images", type="str", help="image dir path")
 
     args = args.parse_args()
 
     test_dir = args.test_path
     submission = pd.read_csv(os.path.join(test_dir, "info.csv"))
-    image_dir = os.path.join(test_dir, "images")
+    image_dir = os.path.join(test_dir, args.image_dir)
 
     device = prepare_device()
 
