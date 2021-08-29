@@ -19,5 +19,5 @@ class FineTuneResNet(nn.Module):
         stdv = 1.0 / math.sqrt(self.model.fc.weight.size(1))
         self.model.fc.bias.data.uniform_(-stdv, stdv)
 
-    def __call__(self, x):
+    def forward(self, x):
         return self.model(x)
