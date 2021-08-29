@@ -78,7 +78,7 @@ if __name__ == "__main__":
         type=float,
         help="Normalize std value",
     )
-    args.add_argument("--image_dir", default="images", type="str", help="image dir path")
+    args.add_argument("--image_dir", default="images", type=str, help="image dir path")
 
     args = args.parse_args()
 
