@@ -1,11 +1,16 @@
 import argparse
 import collections
+
 import torch
+from torch.utils.data import DataLoader
 import numpy as np
-import data_loader.data_loaders as module_data
+
+import data_process.dataset as module_dataset
+import data_process.transform as module_transform
+import model.model as module_model
 import model.loss as module_loss
 import model.metric as module_metric
-import model.model as module_arch
+
 from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
@@ -18,15 +23,23 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
 
+
 def main(config):
     logger = config.get_logger('train')
 
-    # setup data_loader instances
-    data_loader = config.init_obj('data_loader', module_data)
-    valid_data_loader = data_loader.split_validation()
+    # setup data_process instances
+    training_dataset = config.init_obj('training_dataset', module_dataset)
+    training_dataset.transform = getattr(module_transform, config['training_transform'])
+    training_dataset.target_transform = getattr(module_transform, config['train_target_transform'])
+    training_data_loader = DataLoader(training_dataset, **config['training_data_loader'])
+
+    valid_dataset = config.init_obj('valid_dataset', module_dataset)
+    valid_dataset.transform = getattr(module_transform, config['valid_transform'])
+    valid_dataset.target_transform = getattr(module_transform, config['train_target_transform'])
+    valid_data_loader = DataLoader(valid_dataset, **config['valid_data_loader'])
 
     # build model architecture, then print to console
-    model = config.init_obj('arch', module_arch)
+    model = config.init_obj('train_model', module_model)
     logger.info(model)
 
     # prepare for (multi-device) GPU training
@@ -47,7 +60,7 @@ def main(config):
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
                       device=device,
-                      data_loader=data_loader,
+                      data_loader=training_data_loader,
                       valid_data_loader=valid_data_loader,
                       lr_scheduler=lr_scheduler)
 
@@ -56,8 +69,8 @@ def main(config):
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='PyTorch Template')
-    args.add_argument('-c', '--config', default=None, type=str,
-                      help='config file path (default: None)')
+    args.add_argument('-c', '--config', default="./config_train.json", type=str,
+                      help='config file path (default: ./config_train.json)')
     args.add_argument('-r', '--resume', default=None, type=str,
                       help='path to latest checkpoint (default: None)')
     args.add_argument('-d', '--device', default=None, type=str,
@@ -67,7 +80,7 @@ if __name__ == '__main__':
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
     options = [
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
-        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size')
+        CustomArgs(['--bs', '--batch_size'], type=int, target='data_process;args;batch_size')
     ]
     config = ConfigParser.from_args(args, options)
     main(config)

@@ -13,7 +13,7 @@ class ConfigParser:
         """
         class to parse configuration json file. Handles hyperparameters for training, initializations of modules, checkpoint saving
         and logging module.
-        :param config: Dict containing configurations, hyperparameters for training. contents of `config.json` file for example.
+        :param config: Dict containing configurations, hyperparameters for training. contents of `config_train.json` file for example.
         :param resume: String, path to the checkpoint being loaded.
         :param modification: Dict keychain:value, specifying position values to be replaced from config dict.
         :param run_id: Unique Identifier for training processes. Used to save checkpoints and training log. Timestamp is being used as default
@@ -23,7 +23,7 @@ class ConfigParser:
         self.resume = resume
 
         # set save_dir where trained model and log will be saved.
-        save_dir = Path(self.config['trainer']['save_dir'])
+        save_dir = Path(self.config['save_dir'])
 
         exper_name = self.config['name']
         if run_id is None: # use timestamp as default run-id
@@ -37,7 +37,7 @@ class ConfigParser:
         self.log_dir.mkdir(parents=True, exist_ok=exist_ok)
 
         # save updated config file to the checkpoint dir
-        write_json(self.config, self.save_dir / 'config.json')
+        # write_json(self.config, self.save_dir / 'config.json')
 
         # configure logging module
         setup_logging(self.log_dir)
@@ -61,9 +61,9 @@ class ConfigParser:
             os.environ["CUDA_VISIBLE_DEVICES"] = args.device
         if args.resume is not None:
             resume = Path(args.resume)
-            cfg_fname = resume.parent / 'config.json'
+            cfg_fname = resume.parent / 'config_train.json'
         else:
-            msg_no_cfg = "Configuration file need to be specified. Add '-c config.json', for example."
+            msg_no_cfg = "Configuration file need to be specified. Add '-c config_train.json', for example."
             assert args.config is not None, msg_no_cfg
             resume = None
             cfg_fname = Path(args.config)
