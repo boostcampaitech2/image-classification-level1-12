@@ -16,16 +16,16 @@ if __name__ == '__main__':
 
     TRAIN_DATA_ROOT = '/opt/ml/input/data/train/'
     SUB_DATA_ROOT = '/opt/ml/input/data/eval/'
-    epoch = 7
+    epoch = 10   #10
     batch_size = 20
-    lr = 1e-5
+    lr = 3e-5
     cv_num = 3
     freeze = False
     debug = False
     addition = 'VIT'
 
     print(f'\nDEBUG: {debug}')
-    print(f'estimated end time: {datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))) + datetime.timedelta(minutes=10*(epoch*cv_num + 1) + 3)}')
+    print(f'estimated end time: {datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=9))) + datetime.timedelta(minutes=8*(epoch*cv_num + 1) + 3)}')
 
     train_session(epoch, batch_size, lr, debug, cv_num)
     model = fit_session(epoch, batch_size, lr, debug)

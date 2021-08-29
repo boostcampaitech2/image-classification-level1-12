@@ -90,7 +90,7 @@ def fit_session(epoch, batch_size, lr, debug):
     for e in range(epoch):
         model.train()
         torch.cuda.empty_cache()
-        model, _loss, _metric = trainer(model, full_dataloader, batch_size, f'fit fold {e}', criterion, optimizer, device)
+        model, _loss, _metric = trainer(model, full_dataloader, batch_size, f'fit epoch {e + 1} / {epoch}', criterion, optimizer, device)
 
     return model
 

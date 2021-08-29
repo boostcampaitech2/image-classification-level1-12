@@ -64,18 +64,35 @@ class MaskDataLoader(DataLoader):
     def __len__(self):
         return self.length
         
-        
+class AddGaussianNoise(object):
+    """
+        transform 에 없는 기능들은 이런식으로 __init__, __call__, __repr__ 부분을
+        직접 구현하여 사용할 수 있습니다.
+    """
+
+    def __init__(self, mean=0., std=1.):
+        self.std = std
+        self.mean = mean
+
+    def __call__(self, tensor):
+        return tensor + torch.randn(tensor.size()) * self.std + self.mean
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
+
+
 def collate_fn(batch):    
     transform = transforms.Compose([
         transforms.CenterCrop(384),
         transforms.ToTensor(), 
         transforms.RandomHorizontalFlip(p = 0.3),
-        transforms.Normalize(mean=0.5, std=0.5)])
+        transforms.Normalize(mean=0.5, std=0.5),
+        AddGaussianNoise()])
     #(0.1**0.5)*torch.randn(5, 10, 20): noise tensor
     img_list, labels = [], []
     for dir, label in batch:
         img = transform(PIL.Image.open(dir))
-        img = img + (0.1**0.5)*torch.randn(img.shape)
+        #img = img + (0.1**0.5)*torch.randn(img.shape)
         img_list.append(img)
         labels.append(label)
 
