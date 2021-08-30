@@ -1,0 +1,33 @@
+{
+    "name": "team_baseline",
+    "n_gpu": 1,
+
+    "model": {
+        "type": "MickeyMaskModel",
+        "args": {
+            "num_classes": 18
+        }
+    },
+    "checkpoint_path":  "/tmp/PycharmProjects/image-classification-level1-12_team/saved/models/team_baseline/0828_214947/model_best.pth",
+    "dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/mask_data/train/images/",
+            "csv_path": "/opt/ml/mask_data/train/val_df.csv",
+            "num_folds": 1
+        }
+    },
+    "transform": "baseline_valid_transform",
+    "target_transform": "baseline_train_target_transform",
+    "data_loader": {
+        "batch_size": 128,
+        "num_workers": 1,
+        "shuffle": false
+    },
+    "loss": "focal_loss",
+    "metrics": [
+        "accuracy", "f1"
+    ],
+
+    "save_dir": "saved/mickeyshoes/"
+}

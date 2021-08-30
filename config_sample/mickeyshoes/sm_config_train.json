@@ -1,0 +1,81 @@
+{
+    "name": "team_baseline",
+    "n_gpu": 1,
+
+    "train_model": {
+        "type": "MickeyMaskModel",
+        "args": {
+            "num_classes": 18
+        }
+    },
+    "training_dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/mask_data/train/images/",
+            "csv_path": "/opt/ml/mask_data/train/train_df.csv",
+            "num_folds": 5,
+            "set_num": 0,
+            "stratified": true,
+            "person_shuffle": true,
+            "kfold_random_state": 74,
+            "training": true
+        }
+    },
+    "valid_dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/mask_data/train/images/",
+            "csv_path": "/opt/ml/mask_data/train/train_df.csv",
+            "num_folds": 5,
+            "set_num": 0,
+            "stratified": true,
+            "person_shuffle": true,
+            "kfold_random_state": 74,
+            "training": false
+        }
+    },
+    "training_transform": "baseline_training_transform",
+    "valid_transform": "baseline_valid_transform",
+    "train_target_transform": "baseline_train_target_transform",
+    "valid_target_transform": "baseline_train_target_transform",
+    "training_data_loader": {
+        "batch_size": 128,
+        "num_workers": 1,
+        "shuffle": true
+    },
+    "valid_data_loader": {
+        "batch_size": 128,
+        "num_workers": 1,
+        "shuffle": true
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 1e-4,
+            "weight_decay": 0,
+            "amsgrad": true
+        }
+    },
+    "loss": "focal_loss",
+    "metrics": [
+        "accuracy", "f1"
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 50,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+        "save_period": 1,
+        "verbosity": 2,
+        
+        "monitor": "min val_loss",
+        "early_stop": 5,
+
+        "tensorboard": true
+    },
+    "save_dir": "saved/mickeyshoes/"
+}
