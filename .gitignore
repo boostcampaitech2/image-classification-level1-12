@@ -105,6 +105,8 @@ data/
 input/
 saved/
 datasets/
+# sungmin model saved
+sm_saved/
 
 # editor, os cache directory
 .vscode/
