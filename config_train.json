@@ -39,12 +39,12 @@
     "train_target_transform": "baseline_train_target_transform",
     "valid_target_transform": "baseline_train_target_transform",
     "training_data_loader": {
-        "batch_size": 48,
+        "batch_size": 64,
         "num_workers": 2,
         "shuffle": true
     },
     "valid_data_loader": {
-        "batch_size": 48,
+        "batch_size": 64,
         "num_workers": 2,
         "shuffle": true
     },

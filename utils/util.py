@@ -41,6 +41,10 @@ def prepare_device(n_gpu_use):
         n_gpu_use = n_gpu
     device = torch.device('cuda:0' if n_gpu_use > 0 else 'cpu')
     list_ids = list(range(n_gpu_use))
+
+    if n_gpu> 0 and n_gpu_use > 0:
+        torch.cuda.empty_cache()
+
     return device, list_ids
 
 class MetricTracker:
