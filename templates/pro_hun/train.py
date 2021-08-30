@@ -218,7 +218,8 @@ if __name__ == "__main__":
         )
 
         dataloaders = {"train": train_loader, "test": val_loader}
-
+        TRAIN_FLAG = 'train'
+        TEST_FLAG = 'test'
         ### 학습 코드 시작
         best_test_accuracy = 0.0
         best_test_loss = 9999.0
@@ -229,15 +230,15 @@ if __name__ == "__main__":
         for epoch in range(args.epoch):
             # if not (flag):
             #     break
-            for phase in ["train", "test"]:
+            for phase in [TRAIN_FLAG, TEST_FLAG]:
                 n_iter = 0
                 running_loss = 0.0
                 running_acc = 0.0
                 running_f1 = 0.0
 
-                if phase == "train":
+                if phase == TRAIN_FLAG:
                     mnist_resnet.train()  # 네트워크 모델을 train 모드로 두어 gradient을 계산하고, 여러 sub module (배치 정규화, 드롭아웃 등)이 train mode로 작동할 수 있도록 함
-                elif phase == "test":
+                elif phase == TEST_FLAG:
                     mnist_resnet.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
 
                 for ind, (images, labels) in enumerate(
@@ -249,7 +250,7 @@ if __name__ == "__main__":
                     optimizer.zero_grad()  # parameter gradient를 업데이트 전 초기화함
 
                     with torch.set_grad_enabled(
-                        phase == "train"
+                        phase == TRAIN_FLAG
                     ):  # train 모드일 시에는 gradient를 계산하고, 아닐 때는 gradient를 계산하지 않아 연산량 최소화
                         logits = mnist_resnet(images)
                         _, preds = torch.max(
@@ -257,7 +258,7 @@ if __name__ == "__main__":
                         )  # 모델에서 linear 값으로 나오는 예측 값 ([0.9,1.2, 3.2,0.1,-0.1,...])을 최대 output index를 찾아 예측 레이블([2])로 변경함
                         loss = loss_fn(logits, labels)
 
-                        if phase == "train":
+                        if phase == TRAIN_FLAG:
                             loss.backward()  # 모델의 예측 값과 실제 값의 CrossEntropy 차이를 통해 gradient 계산
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
 
@@ -281,16 +282,16 @@ if __name__ == "__main__":
                     f"현재 epoch-{epoch}의 {phase}-데이터 셋에서 평균 Loss : {epoch_loss:.3f}, 평균 Accuracy : {epoch_acc:.3f}, F1 Score : {epoch_f1:.3f}"
                 )
                 if (
-                    phase == "test" and best_test_accuracy < epoch_acc
+                    phase == TEST_FLAG and best_test_accuracy < epoch_acc
                 ):  # phase가 test일 때, best accuracy 계산
                     best_test_accuracy = epoch_acc
                 if (
-                    phase == "test" and best_test_loss > epoch_loss
+                    phase == TEST_FLAG and best_test_loss > epoch_loss
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
 
                 # Early Stopping Code
-                # if phase == "test":
+                # if phase == TEST_FLAG:
                 #     if pred_f1 <= epoch_f1:
                 #         pred_f1 = epoch_f1
                 #         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
