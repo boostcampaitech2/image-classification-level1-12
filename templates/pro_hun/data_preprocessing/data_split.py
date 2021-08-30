@@ -2,11 +2,13 @@ import argparse
 import os
 import random
 import shutil
+import sys
 
 import numpy as np
 import pandas as pd
 import tqdm
 from sklearn.model_selection import StratifiedKFold
+sys.path.append('/opt/ml/image-classification-level1-12/templates/pro_hun')
 from utils.util import ensure_dir
 
 random_seed = 12
@@ -63,12 +65,15 @@ if __name__ == "__main__":
         help="train_path",
     )
     args.add_argument("--fold_num", default=5, type=int, help="kfold_num")
-
+    args.add_argument("--image_data", default="train_with_label.csv", type=str, help="Use Original or Original+Crop",)
+    args.add_argument("--image_folder", default="image_all", type=str, help="Split_image folder",)
     args = args.parse_args()
 
+    # 그대로 실행하면 Original Data를 Split해주고,
+    # python pro_hun/data_preprocessing/data_split.py --image_data "train_with_crop.csv" --image_folder "image_crop_all"로 실행하면 Crop된 Data를 Split해줌
     train_path = args.train_path
-    train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
-    run_train = Run_Split(os.path.join(train_path, "image_all"))
+    train_label = pd.read_csv(os.path.join(train_path, args.image_data))
+    run_train = Run_Split(os.path.join(train_path, args.image_folder))
     fold_num = args.fold_num
     train_list, val_list = run_train.train_val_split(train_label, fold_num)
 

@@ -43,12 +43,13 @@ random.seed(random_seed)
 
 
 class Mask_Dataset(object):
-    def __init__(self, transforms, name, df, path, image_type):
+    def __init__(self, transforms, name, df, path, image_type, folder):
         self.transforms = transforms
         self.name = name
         self.path = path
+        self.folder = folder
         self.imgs = sorted(
-            os.listdir(os.path.join(self.path, f"image_all/{self.name}_image"))
+            os.listdir(os.path.join(self.path, f"{self.folder}/{self.name}_image"))
         )
         self.df = df
         # crop이미지를 사용하고 싶으면 "crop_path", 원본은 "path"
@@ -132,18 +133,12 @@ if __name__ == "__main__":
         type=str,
         help="Use Original or Original+Crop",
     )
-    args.add_argument(
-        "--split_folder",
-        default="image_all",
-        type=str,
-        help="where to split?",
-    )
 
     args = args.parse_args()
 
     train_path = args.train_path
     train_label = pd.read_csv(os.path.join(train_path, args.image_data))
-    run_split = Run_Split(os.path.join(train_path, args.split_folder))
+    run_split = Run_Split(os.path.join(train_path, "image_all"))
     fold_num = args.fold_size
     train_list, val_list = run_split.train_val_split(train_label, fold_num)
 
@@ -192,7 +187,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
 
         train_dataset = Mask_Dataset(
-            data_transform, f"train{i}", train_list[i], train_path, args.image_type
+            data_transform, f"train{i}", train_list[i], train_path, args.image_type, args.split_folder
         )
         train_loader = DataLoader(
             train_dataset,
@@ -202,7 +197,7 @@ if __name__ == "__main__":
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
             #  num_workers=2
         )
-        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path, args.image_type)
+        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path, args.image_type, args.split_folder)
         val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,
