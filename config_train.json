@@ -15,7 +15,9 @@
             "csv_path": "/opt/ml/mask_data/train/train.csv",
             "num_folds": 5,
             "set_num": 0,
+            "stratified": true,
             "person_shuffle": true,
+            "kfold_random_state": 74,
             "training": true
         }
     },
@@ -26,7 +28,9 @@
             "csv_path": "/opt/ml/mask_data/train/train.csv",
             "num_folds": 5,
             "set_num": 0,
+            "stratified": true,
             "person_shuffle": true,
+            "kfold_random_state": 74,
             "training": false
         }
     },

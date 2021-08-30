@@ -1,13 +1,10 @@
 import os
-from copy import deepcopy
-from collections import defaultdict
-import random
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import PIL
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from torchvision.datasets.vision import VisionDataset
 
 from data_process.class_converter import mask_to_mask_class, age_to_age_class
@@ -30,9 +27,10 @@ class MaskTrainDataset(VisionDataset):
             root: str,
             csv_path: str,
             num_folds: int = 5,
-            person_shuffle: bool = True,
             set_num: int = 0,
-            random_state: int = 74,
+            stratified: bool = True,
+            person_shuffle: bool = True,
+            kfold_random_state: int = 74,
             training: bool = True
     ):
         """
@@ -41,16 +39,17 @@ class MaskTrainDataset(VisionDataset):
         :param num_folds: the number of folds
         :param person_shuffle: train, valid 구분시 같은 사람의 여러 이미지가 나뉘어서 shuffle 될 수 있는지 여부
         :param set_num: (train-valid) set to select (0 ~ num_fold-1)
-        :param random_state: random seed for KFold
+        :param kfold_random_state: random seed for KFold
         :param training: True - training data, False - validation data
         """
         super(MaskTrainDataset, self).__init__(root)
-        self.csv_path = csv_path
-        self.person_shuffle = person_shuffle
-        self.num_folds = num_folds
-        self.set_num = set_num
-        self.random_state = random_state
-        self.training = training
+        self._csv_path = csv_path
+        self._num_folds = num_folds
+        self._set_num = set_num
+        self._stratified = stratified
+        self._person_shuffle = person_shuffle
+        self._kfold_random_state = kfold_random_state
+        self._training = training
 
         # read csv and shuffle
         meta_data_all = pd.read_csv(csv_path)
@@ -68,14 +67,14 @@ class MaskTrainDataset(VisionDataset):
         # person_shuffle = False 이면
         #     "for mask_file_name in TRAIN_MASK_FILE_NAMES:" 가 K-Fold 후에 등장
         selected_meta_data: List[Dict] = list()
-        if self.num_folds < 2:
+        if self._num_folds < 2:
             for _, meta_row in meta_data_all.iterrows():
                 for mask_file_name in TRAIN_MASK_FILE_NAMES:
                     data = {"mask_file_name": mask_file_name}
                     data.update(meta_row)
                     selected_meta_data.append(data)
         else:   # self.num_folds >= 2
-            if self.person_shuffle:
+            if self._person_shuffle:
                 data_list: List[Dict] = list()
                 class_list: List[str] = list()
                 for _, meta_row in meta_data_all.iterrows():
@@ -92,11 +91,14 @@ class MaskTrainDataset(VisionDataset):
                         class_list.append("_".join(class_tuple))
 
                 # split each class data and select folds
-                skf = StratifiedKFold(n_splits=self.num_folds, random_state=self.random_state, shuffle=True)
+                if self._stratified:
+                    skf = StratifiedKFold(n_splits=self._num_folds, random_state=self._kfold_random_state, shuffle=True)
+                else:
+                    skf = KFold(n_splits=self._num_folds, random_state=self._kfold_random_state, shuffle=True)
                 # self.num_folds 개의 set 중 self.set_num 번째를 택한다.
-                train_set = list(skf.split(np.zeros(len(data_list)), class_list))[self.set_num]
+                train_set = list(skf.split(np.zeros(len(data_list)), class_list))[self._set_num]
                 training_indexes, validation_indexes = train_set[0].tolist(), train_set[1].tolist()
-                selected_indexes = training_indexes if self.training else validation_indexes
+                selected_indexes = training_indexes if self._training else validation_indexes
                 selected_meta_data = [data_list[index] for index in selected_indexes]
             else:  # self.num_folds >= 2 and not self.person_shuffle:
                 class_list: List[str] = list()
@@ -108,11 +110,14 @@ class MaskTrainDataset(VisionDataset):
                     class_list.append("_".join(class_tuple))
 
                 # split each class data and select folds
-                skf = StratifiedKFold(n_splits=self.num_folds, random_state=self.random_state, shuffle=True)
+                if self._stratified:
+                    skf = StratifiedKFold(n_splits=self._num_folds, random_state=self._kfold_random_state, shuffle=True)
+                else:
+                    skf = KFold(n_splits=self._num_folds, random_state=self._kfold_random_state, shuffle=True)
                 # self.num_folds 개의 set 중 self.set_num 번째를 택한다.
-                train_set = list(skf.split(np.zeros(len(meta_data_all)), class_list))[self.set_num]
+                train_set = list(skf.split(np.zeros(len(meta_data_all)), class_list))[self._set_num]
                 training_indexes, validation_indexes = train_set[0].tolist(), train_set[1].tolist()
-                selected_indexes = training_indexes if self.training else validation_indexes
+                selected_indexes = training_indexes if self._training else validation_indexes
                 # meta data of selected people
                 selected_people: List[Dict] = [meta_data_all[index] for index in selected_indexes]
 
