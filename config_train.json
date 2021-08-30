@@ -12,7 +12,7 @@
         "type": "MaskTrainDataset",
         "args":{
             "root": "/opt/ml/mask_data/train/images/",
-            "csv_path": "/opt/ml/mask_data/train/train.csv",
+            "csv_path": "/opt/ml/mask_data/train/train_df.csv",
             "num_folds": 5,
             "set_num": 0,
             "stratified": true,
@@ -25,7 +25,7 @@
         "type": "MaskTrainDataset",
         "args":{
             "root": "/opt/ml/mask_data/train/images/",
-            "csv_path": "/opt/ml/mask_data/train/train.csv",
+            "csv_path": "/opt/ml/mask_data/train/train_df.csv",
             "num_folds": 5,
             "set_num": 0,
             "stratified": true,
