@@ -188,7 +188,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
 
         train_dataset = Mask_Dataset(
-            data_transform, f"train{i}", train_list[i], train_path, args.image_type, args.split_folder
+            data_transform, f"train{i}", train_list[i], train_path, args.image_type, args.image_folder
         )
         train_loader = DataLoader(
             train_dataset,
@@ -198,7 +198,7 @@ if __name__ == "__main__":
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
             #  num_workers=2
         )
-        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path, args.image_type, args.split_folder)
+        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path, args.image_type, args.image_folder)
         val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,
