@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--mode', type=str, default='train', help='set mode to execute models (default : train)')
     parser.add_argument('--lr', type=float, default=0.0001, help='set learning rate (default : 0.0001)')
     parser.add_argument('--seed', type=int, default=12, help='set random seed number (default : 12)')
+    parser.add_argument('--epochs', type=int, default=5, help='set epochs (default :5 , max : 10)')
 
     args = parser.parse_args()
     
@@ -40,16 +41,21 @@ def main():
         datasets = MaskDataset(data_frames, transform=transform,train=True)
         data_loader = DataLoader(datasets, batch_size=128, shuffle=True)#, num_workers=2)
         model = MaskModel(NUM_CLASSES).to(DEVICE)
-        model.init_params()
+        # model.init_params()
         criterion = Loss('default').loss_function()
         optm = optim.Adam(model.parameters(), lr=args.lr)
 
         # create lr scheduler
-        # lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optm,
-        # mode='max',factor=0.5, patience=2)
+        lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optm,
+        mode='max',factor=0.5, patience=2)
+
+        if args.epochs > 11:
+            args.epochs = 10
+
+        model.train()
 
         start_time = time.time()
-        for epoch in range(10):
+        for epoch in range(args.epochs):
             loss_value_sum = 0
             epoch_f1 = 0
             # 바로 data_loader 값을 넣을 수 있음
@@ -68,11 +74,16 @@ def main():
                     print(f'\tepoch : {epoch} loss {i} : {loss_out.data}')
                 loss_out.backward()
                 optm.step()
-                # lr_scheduler.step(loss_out/len(data_loader))
+                lr_scheduler.step(loss_out/len(data_loader))
                 loss_value_sum += loss_out
 
             print(f'loss avg : {loss_value_sum/len(data_loader)}')
-            print(f'f1_score per {epoch} : {epoch_f1/epoch:4f}')
+            print(f'f1_score per {epoch} : {epoch_f1/(epoch+1):4f}')
+            print(optm.state_dict()['param_groups'][0]['lr'])
+
+            # 이 조건을 valid 로 정해야 하는거 같은데?
+            if epoch_f1/(epoch+1) > 90 and loss_value_sum/len(data_loader) <0.7:
+                torch.save(model.state_dict(),'./pre_model_results/'+now + f'_{epoch}_stopped.pt')
 
         end_time = time.time()
         print(f'{(end_time - start_time)//60} minutes')
@@ -100,7 +111,7 @@ def main():
 
         # get model
         model = MaskModel(NUM_CLASSES).to(DEVICE)
-        model.load_state_dict(torch.load('./model_results/model_08_27_19_00.pt'))
+        model.load_state_dict(torch.load('./model_results/model_08_29_17_14.pt'))
         
         #test
         with torch.no_grad():

@@ -11,7 +11,7 @@ class MaskModel(nn.Module):
     """
     def __init__(self, classes):
         super().__init__()
-        self.models = models.resnet18(pretrained=True)
+        self.models = models.resnet34(pretrained=True)
         self.models.fc = nn.Linear(512, classes)
         print(f'network # input channel : {self.models.conv1.weight.size(1)}')
         print(f'network # output channel : {self.models.fc.weight.shape[0]}')
