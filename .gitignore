@@ -110,3 +110,8 @@ datasets/
 .vscode/
 .idea/
 __MACOSX/
+
+# config json
+/config_train.json
+/config_test.json
+/config_eval.json
