@@ -126,12 +126,24 @@ if __name__ == "__main__":
         type=str,
         help="Use crop image or Original",
     )
+    args.add_argument(
+        "--image_data",
+        default="train_with_label.csv",
+        type=str,
+        help="Use Original or Original+Crop",
+    )
+    args.add_argument(
+        "--split_folder",
+        default="image_all",
+        type=str,
+        help="where to split?",
+    )
 
     args = args.parse_args()
 
     train_path = args.train_path
-    train_label = pd.read_csv(os.path.join(train_path, "train_with_label.csv"))
-    run_split = Run_Split(os.path.join(train_path, "image_all"))
+    train_label = pd.read_csv(os.path.join(train_path, args.image_data))
+    run_split = Run_Split(os.path.join(train_path, args.split_folder))
     fold_num = args.fold_size
     train_list, val_list = run_split.train_val_split(train_label, fold_num)
 
