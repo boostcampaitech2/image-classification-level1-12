@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 from torchvision.utils import make_grid
+from tqdm import tqdm
+
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
 
@@ -81,8 +83,9 @@ class Trainer(BaseTrainer):
         """
         self.model.eval()
         self.valid_metrics.reset()
+        print("Validation")
         with torch.no_grad():
-            for batch_idx, (data, target) in enumerate(self.valid_data_loader):
+            for batch_idx, (data, target) in enumerate(tqdm(self.valid_data_loader)):
                 data, target = data.to(self.device), target.to(self.device)
 
                 output = self.model(data)
