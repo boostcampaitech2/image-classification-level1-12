@@ -3,6 +3,7 @@
 ## History
 |Date|Contributor|Descrption|
 |:----:|:---:|:---|
+|2021.08.30|황원상|MaskEvalDataset, eval 구현|
 |2021.08.30|황원상|/config_train.json, /config_test.json 삭제, git ignore 처리|
 |2021.08.30|황원상|- transfrom, loss, metric, model 개인 디렉토리 생성|
 |2021.08.29|황원상|- Dataset 구현<br>- dataloader 선택 -> dataset, transform을 따로 선택할 수 있도록 변경|

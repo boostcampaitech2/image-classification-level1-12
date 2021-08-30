@@ -133,7 +133,6 @@ class MaskTrainDataset(VisionDataset):
             image_path = os.path.join(root + "/" + a_data["path"] + "/" + a_data["mask_file_name"])
             self.image_path_and_meta_list.append((image_path, a_data))
 
-
     def __len__(self):
         return len(self.image_path_and_meta_list)
 
@@ -171,51 +170,37 @@ class MaskEvalDataset(VisionDataset):
     def __init__(
             self,
             root: str,
-            transform: Optional[Callable] = None
+            csv_path: str,
     ):
         """
-        :param root: the absolute path of data directory
-        :param transform: transform to be applied to image
+        :param root: the absolute path of root image directory
+        :param csv_path: the absolute path of csv file
         """
-        super(MaskEvalDataset, self).__init__(root, transform=transform)
+        super(MaskEvalDataset, self).__init__(root)
 
+        self._csv_path = csv_path
         # read csv
-        self.selected_data = \
-            [meta_row for _, meta_row in pd.read_csv(os.path.join(root + "/eval/info.csv")).iterrows()]
+        meta_data = pd.read_csv(os.path.join(self._csv_path))
 
-        # make the full paths of images and save them with target infos to the list
-        self.image_path_and_info_list = list()
-        for a_data in self.selected_data:
-            image_path = os.path.join(root + "/eval/images/" + a_data["ImageID"])
-            info = a_data["ans"]
-            self.image_path_and_info_list.append((image_path, info))
+        # make the full paths of images and save them to the list
+        self.image_path_list = [os.path.join(self.root + "/" + row["ImageID"]) for _, row in meta_data.iterrows()]
 
     def __len__(self):
-        return len(self.image_path_and_info_list)
+        return len(self.image_path_list)
 
     def __getitem__(self, idx):
         """
         :param idx: image sequence number (not depending on meta data)
-        :return: (image path: str, label: Optional[Dict[str, Union[str,int]]])
-        example
-            image path
-                /opt/ml/mask_data/eval/images/9da5ae3d63373e1e44e9a323d17779f2b661e50d (file extension is not included)
-            info
-                0
+        :return: If transforms don't exist, (PIL.Image, 0) are returned.
         """
-        img_path, info = self.image_path_and_info_list[idx]
+        img_path = self.image_path_list[idx]
 
         # load and transform image
         img = PIL.Image.open(img_path)
-
         if not img:
             raise FileNotFoundError(f'No such file: {img_path}{" or ".join(IMAGE_FILE_EXTENSION)}')
-
         if self.transform is not None:
             img = self.transform(img)
 
-        # target
-        target = info
-
-        return img, target
+        return img, 0
 
