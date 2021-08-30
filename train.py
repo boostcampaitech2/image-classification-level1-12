@@ -7,9 +7,9 @@ import numpy as np
 
 import data_process.dataset as module_dataset
 import data_process.transform as module_transform
-import model.model as module_model
-import model.loss as module_loss
-import model.metric as module_metric
+import model as module_model
+import loss as module_loss
+import metric as module_metric
 
 from parse_config import ConfigParser
 from trainer import Trainer

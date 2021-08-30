@@ -1,6 +1,6 @@
 from torchvision import transforms
 
-from data_process.custom_transform_class import AddGaussianNoise, OneClassTarget
+from data_process.transform.baseline.custom_transform import AddGaussianNoise, OneClassTarget
 
 
 baseline_training_transform = transforms.Compose([
