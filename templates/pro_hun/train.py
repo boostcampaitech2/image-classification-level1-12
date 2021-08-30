@@ -30,16 +30,26 @@ from data_preprocessing.data_split import Run_Split
 from model.loss import batch_loss
 from model.metric import batch_acc, batch_f1, epoch_mean
 from model.model import resnet_finetune
-from utils.util import ensure_dir, notification, prepare_device
+from utils.util import ensure_dir, notification, prepare_device, fix_randomseed
 
-random_seed = 12
-torch.manual_seed(random_seed)
-torch.cuda.manual_seed(random_seed)
-torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(random_seed)
-random.seed(random_seed)
+
+class FocalLoss(nn.Module):
+    def __init__(self, weight=None,
+                 gamma=2., reduction='mean'):
+        nn.Module.__init__(self)
+        self.weight = weight
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, input_tensor, target_tensor):
+        log_prob = F.log_softmax(input_tensor, dim=-1)
+        prob = torch.exp(log_prob)
+        return F.nll_loss(
+            ((1 - prob) ** self.gamma) * log_prob,
+            target_tensor,
+            weight=self.weight,
+            reduction=self.reduction
+        )
 
 
 class Mask_Dataset(object):
@@ -136,6 +146,7 @@ if __name__ == "__main__":
     args.add_argument("--image_folder", default="image_all", type=str, help="Split_image folder",)
 
     args = args.parse_args()
+    fix_randomseed(12)
 
     train_path = args.train_path
     train_label = pd.read_csv(os.path.join(train_path, args.image_data))
@@ -183,7 +194,7 @@ if __name__ == "__main__":
         mnist_resnet = resnet_finetune(resnet18, 18).to(device)
 
         # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
-        loss_fn = torch.nn.CrossEntropyLoss()
+        loss_fn = FocalLoss()
         # weight 업데이트를 위한 optimizer를 Adam으로 사용함
         optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
 

@@ -1,6 +1,8 @@
 import json
 import sys
 from pathlib import Path
+import numpy as np
+import random
 
 import requests
 import torch
@@ -17,6 +19,17 @@ def prepare_device():
     # 학습 때 GPU 사용여부 결정. Colab에서는 "런타임"->"런타임 유형 변경"에서 "GPU"를 선택할 수 있음
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     return device
+
+
+def fix_randomseed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if use multi-GPU
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
+
 
 
 def notification(best_acc):

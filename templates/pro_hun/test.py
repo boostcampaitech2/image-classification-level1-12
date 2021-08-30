@@ -18,16 +18,7 @@ from torchvision import transforms
 from torchvision.transforms import Normalize, Resize, ToTensor
 from tqdm.notebook import tqdm
 
-from utils.util import prepare_device
-
-random_seed = 12
-torch.manual_seed(random_seed)
-torch.cuda.manual_seed(random_seed)
-torch.cuda.manual_seed_all(random_seed)  # if use multi-GPU
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(random_seed)
-random.seed(random_seed)
+from utils.util import prepare_device, fix_randomseed
 
 
 class TestDataset(Dataset):
@@ -81,6 +72,7 @@ if __name__ == "__main__":
     args.add_argument("--image_dir", default="images", type=str, help="image dir path")
 
     args = args.parse_args()
+    fix_randomseed(12)
 
     test_dir = args.test_path
     submission = pd.read_csv(os.path.join(test_dir, "info.csv"))

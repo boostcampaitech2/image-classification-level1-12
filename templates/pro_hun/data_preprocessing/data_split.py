@@ -11,10 +11,6 @@ from sklearn.model_selection import StratifiedKFold
 sys.path.append('/opt/ml/image-classification-level1-12/templates/pro_hun')
 from utils.util import ensure_dir
 
-random_seed = 12
-np.random.seed(random_seed)
-random.seed(random_seed)
-
 
 class Run_Split:
     def __init__(self, dirname):
@@ -68,6 +64,8 @@ if __name__ == "__main__":
     args.add_argument("--image_data", default="train_with_label.csv", type=str, help="Use Original or Original+Crop",)
     args.add_argument("--image_folder", default="image_all", type=str, help="Split_image folder",)
     args = args.parse_args()
+    np.random.seed(12)
+    random.seed(12)
 
     # 그대로 실행하면 Original Data를 Split해주고,
     # python pro_hun/data_preprocessing/data_split.py --image_data "train_with_crop.csv" --image_folder "image_crop_all"로 실행하면 Crop된 Data를 Split해줌
