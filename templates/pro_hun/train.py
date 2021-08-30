@@ -271,22 +271,21 @@ if __name__ == "__main__":
                     best_test_loss = epoch_loss
 
                 # Early Stopping Code
-                if phase == "test":
-                    if pred_f1 <= epoch_f1:
-                        pred_f1 = epoch_f1
-                        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
-                        print(f"{epoch}번째 모델 저장!")
-                        early_ind = 0
-                    else:
-                        print(f"{epoch}번째 모델 pass")
+                # if phase == "test":
+                #     if pred_f1 <= epoch_f1:
+                #         pred_f1 = epoch_f1
+                #         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
+                #         print(f"{epoch}번째 모델 저장!")
+                #         early_ind = 0
+                #     else:
+                #         print(f"{epoch}번째 모델 pass")
                 # early_ind += 1
                 # if early_ind == 2:
                 #     flag = False
                 #     break
-        # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
+        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
-    # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
     ed_time = time.time()
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
