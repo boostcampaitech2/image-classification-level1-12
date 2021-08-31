@@ -45,7 +45,7 @@ class Trainer(BaseTrainer):
             data = data.to(self.device)
             target = target[0].long().to(self.device), \
                      target[1].long().to(self.device), \
-                     target[2].float().to(self.device).view(-1, 1)
+                     target[2].float().to(self.device)
                      # torch.FloatTensor(target[1].float()).to(self.device)
 
             self.optimizer.zero_grad()
@@ -93,7 +93,7 @@ class Trainer(BaseTrainer):
                 data = data.to(self.device)
                 target = target[0].long().to(self.device), \
                          target[1].long().to(self.device), \
-                         target[2].float().to(self.device).view(-1, 1)
+                         target[2].float().to(self.device)
                 # torch.FloatTensor(target[1].float()).to(self.device)
 
                 output = self.model(data)
