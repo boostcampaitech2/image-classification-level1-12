@@ -13,7 +13,11 @@ class LJH_vision_transformer(nn.Module):
     def __init__(self, num_classes:int = 18):
         super().__init__()
         self.backbone = ViT('L_32_imagenet1k', pretrained=True)
-        self.backbone.fc = nn.Linear(1024, num_classes, bias = True)
+        self.backbone.fc = nn.Sequential(
+                                    nn.Dropout(0.15),
+                                    nn.Linear(1024, num_classes, bias = True)
+                                    )
+
         #add dropout
     def forward(self, x):
         x = self.backbone(x)

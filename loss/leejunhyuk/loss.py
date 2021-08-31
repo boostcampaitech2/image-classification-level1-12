@@ -30,3 +30,5 @@ class cosineloss(nn.Module):
         labels = (label_A==label_B).int()
 
         return self.cosine(tensor_A, tensor_B, labels)
+
+cust_FocalLoss = LJH_FocalLoss()
