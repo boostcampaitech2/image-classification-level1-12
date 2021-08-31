@@ -1,7 +1,9 @@
 from typing import Tuple
 
+from sklearn.metrics import f1_score
 import torch
 from torch import Tensor
+
 
 
 def age_to_age_class(age: Tensor):
@@ -69,3 +71,15 @@ def top_k_acc(output, target, k=3):
         for i in range(k):
             correct += torch.sum(pred[:, i] == target).item()
     return correct / len(target)
+
+
+def f1(output: Tuple[Tensor, Tensor, Tensor], target: Tuple[Tensor, Tensor, Tensor], average="macro"):
+    with torch.no_grad():
+        mask_pred = torch.argmax(output[0], dim=1)
+        gender_pred = torch.argmax(output[1], dim=1)
+        age_pred = age_to_age_class(output[2]).view(-1)
+        total_pred = mask_pred * 6 + gender_pred * 3 + age_pred
+
+        total_target = target[0] * 6 + target[1] * 3 + age_to_age_class(target[2]).view(-1)
+
+    return f1_score(total_pred.detach().cpu().numpy(), total_target.detach().cpu().numpy(), average=average)
