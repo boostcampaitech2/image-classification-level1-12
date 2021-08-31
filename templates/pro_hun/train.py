@@ -257,7 +257,7 @@ if __name__ == "__main__":
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
 
                     running_loss += batch_loss(loss, images)  # 한 Batch에서의 loss 값 저장
-                    running_acc += batch_acc(
+                    running_acc+= batch_acc(
                         preds, labels.data
                     )  # 한 Batch에서의 Accuracy 값 저장
                     running_f1 += batch_f1(
