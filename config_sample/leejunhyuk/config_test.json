@@ -1,0 +1,33 @@
+{
+    "name": "team_baseline",
+    "n_gpu": 1,
+
+    "model": {
+        "type": "LJH_vision_transformer",
+        "args": {
+            "num_classes": 18
+        }
+    },
+    "checkpoint_path":  "/opt/ml/models/0830/model_best.pth",
+    "dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/input/data/train/images/",
+            "csv_path": "/opt/ml/input/data/train/images/test_df.csv",
+            "num_folds": 1
+        }
+    },
+    "transform": "baseline_valid_transform",
+    "target_transform": "baseline_train_target_transform",
+    "data_loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": false
+    },
+    "loss": "cross_entropy",
+    "metrics": [
+        "accuracy", "f1"
+    ],
+
+    "save_dir": "saved/"
+}

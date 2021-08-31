@@ -1,0 +1,81 @@
+{
+    "name": "team_baseline",
+    "n_gpu": 1,
+
+    "train_model": {
+        "type": "LJH_vision_transformer",
+        "args": {
+            "num_classes": 18
+        }
+    },
+    "training_dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/input/data/train/images/",
+            "csv_path": "/opt/ml/input/data/train/train_df.csv",
+            "num_folds": 5,
+            "set_num": 0,
+            "stratified": true,
+            "person_shuffle": true,
+            "kfold_random_state": 74,
+            "training": true
+        }
+    },
+    "valid_dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/input/data/train/images/",
+            "csv_path": "/opt/ml/input/data/train/val_df.csv",
+            "num_folds": 5,
+            "set_num": 0,
+            "stratified": true,
+            "person_shuffle": true,
+            "kfold_random_state": 74,
+            "training": false
+        }
+    },
+    "training_transform": "LJH_training_transform",
+    "valid_transform": "LJH_testing_transform",
+    "train_target_transform": "baseline_train_target_transform",
+    "valid_target_transform": "baseline_train_target_transform",
+    "training_data_loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": true
+    },
+    "valid_data_loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": true
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 1e-5,
+            "weight_decay": 0,
+            "amsgrad": true
+        }
+    },
+    "loss": "cross_entropy",
+    "metrics": [
+        "accuracy", "f1"
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 20,
+            "gamma": 0.5
+        }
+    },
+    "trainer": {
+        "epochs": 3,
+        "save_period": 1,
+        "verbosity": 2,
+        
+        "monitor": "min val_loss",
+        "early_stop": 10,
+
+        "tensorboard": true
+    },
+    "save_dir": "saved/"
+}
