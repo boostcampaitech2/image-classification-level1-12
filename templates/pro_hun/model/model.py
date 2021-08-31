@@ -37,3 +37,15 @@ def resnet_finetune(model, classes):
     # model.fc2.bias.data.uniform_(-stdv, stdv)
 
     return model
+
+
+
+from efficientnet_pytorch import EfficientNet
+def efficient_model(name, classes):
+    print(f'{name}_Start')
+    model_name = name
+    model = EfficientNet.from_pretrained(model_name, num_classes=classes)
+    print(f'{model}_Load')
+
+
+    return model

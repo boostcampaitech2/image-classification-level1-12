@@ -29,7 +29,7 @@ from torchvision.transforms.transforms import GaussianBlur, RandomRotation
 from data_preprocessing.data_split import Run_Split
 from model.loss import batch_loss
 from model.metric import batch_acc, batch_f1, epoch_mean
-from model.model import resnet_finetune
+from model.model import resnet_finetune, efficient_model
 from utils.util import ensure_dir, notification, prepare_device, fix_randomseed
 
 
@@ -92,6 +92,7 @@ def collate_fn(batch):
 
 
 if __name__ == "__main__":
+    torch.cuda.empty_cache()
     args = argparse.ArgumentParser(description="PyTorch Template")
     args.add_argument(
         "-lr",
@@ -185,7 +186,8 @@ if __name__ == "__main__":
     st_time = time.time()
     for i in range(fold_num):
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
-        mnist_resnet = resnet_finetune(resnet18, 18).to(device)
+        # mnist_resnet = resnet_finetune(resnet18, 18).to(device)
+        mnist_resnet = efficient_model('efficientnet-b0', 18).to(device)
 
         # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
         loss_fn = FocalLoss()
