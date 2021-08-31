@@ -14,6 +14,7 @@ import model.metric as module_metric
 from model.loss import MaskLoss
 from utils import prepare_device
 from parse_config import ConfigParser
+from model.metric import age_to_age_class
 
 
 # fix random seeds for reproducibility
@@ -21,11 +22,13 @@ SEED = 123
 torch.manual_seed(SEED)
 np.random.seed(SEED)
 
+torch.cuda.empty_cache()
+
 
 def convert_3class_to_1class(output: Tuple[torch.Tensor, torch.Tensor, torch.Tensor]) -> torch.Tensor:
     mask_pred = torch.argmax(output[0], dim=1)
     gender_pred = torch.argmax(output[1], dim=1)
-    age_pred = torch.argmax(output[2], dim=1)
+    age_pred = age_to_age_class(output[2]).view(-1)
 
     return torch.mul(mask_pred, 6) + torch.mul(gender_pred, 3) + age_pred
 
@@ -59,7 +62,7 @@ def main(config):
     loss_fn = MaskLoss()
     metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
-    checkpoint_file_path = "/tmp/pycharm_project_862/saved/models/Mask_vgg19_lin2/0828_133524/checkpoint-epoch8.pth"
+    checkpoint_file_path = "/tmp/PycharmProjects/image-classification-level1-12_hwang/saved/models/Mask_vgg19_lin2/0831_043447/checkpoint-epoch12.pth"
     logger.info('Loading checkpoint: {} ...'.format(checkpoint_file_path))
     checkpoint = torch.load(checkpoint_file_path)
     state_dict = checkpoint['state_dict']
@@ -72,6 +75,8 @@ def main(config):
     model = model.to(device)
     model.eval()
 
+    torch.cuda.empty_cache()
+
     all_predictions = list()
     with torch.no_grad():
         for i, (data, target) in enumerate(tqdm(eval_data_loader)):
@@ -83,7 +88,7 @@ def main(config):
     # 제출할 파일을 저장합니다.
     submission = pd.read_csv("/opt/ml/mask_data/eval/info.csv")
     submission['ans'] = all_predictions
-    submission.to_csv('./saved/submission/submission_0828_133524_8.csv', index=False)
+    submission.to_csv('./saved/submission/submission_0831_043447_12.csv', index=False)
     # epoch: 3
     # loss: 0.2146139108273299
     # mask_total_accuracy: 0.9237868785858154

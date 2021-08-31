@@ -83,6 +83,8 @@ def main(config):
     if len(device_ids) > 1:
         model = torch.nn.DataParallel(model, device_ids=device_ids)
 
+    torch.cuda.empty_cache()
+
     # device = 'cpu'
 
     # get function handles of loss and metrics
@@ -90,8 +92,10 @@ def main(config):
     # criterion = mask_total_loss
     mask_weight = None
     gender_weight = None
+    # age_weight = None
     # age_weight = torch.tensor([1.4, 1., 6.1]).to(device)
-    age_weight = torch.tensor([1.2, 1., 3.4]).to(device)
+    # age_weight = torch.tensor([1.2, 1., 3.4]).to(device)
+    age_weight = torch.tensor([1., 1., 3.4]).to(device)
     # age_weight = torch.tensor([1.2, 1., 6]).to(device)
     criterion = MaskLoss(
                     mask_weight=mask_weight,

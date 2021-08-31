@@ -45,7 +45,7 @@ class Trainer(BaseTrainer):
             data = data.to(self.device)
             target = target[0].long().to(self.device), \
                      target[1].long().to(self.device), \
-                     target[2].long().to(self.device)
+                     target[2].float().to(self.device).view(-1, 1)
                      # torch.FloatTensor(target[1].float()).to(self.device)
 
             self.optimizer.zero_grad()
@@ -91,9 +91,9 @@ class Trainer(BaseTrainer):
             for batch_idx, (data, target) in enumerate(self.valid_data_loader):
                 # data, target = data.to(self.device), target.to(self.device)
                 data = data.to(self.device)
-                target = torch.LongTensor(target[0]).to(self.device), \
-                         torch.LongTensor(target[1]).to(self.device), \
-                         torch.LongTensor(target[2]).to(self.device)
+                target = target[0].long().to(self.device), \
+                         target[1].long().to(self.device), \
+                         target[2].float().to(self.device).view(-1, 1)
                 # torch.FloatTensor(target[1].float()).to(self.device)
 
                 output = self.model(data)

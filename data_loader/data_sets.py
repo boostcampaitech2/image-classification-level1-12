@@ -25,8 +25,9 @@ class MaskDataset(VisionDataset):
             train: bool = True,
             num_folds: int = 1,
             folds: Optional[List[int]] = None,
-            random_seed: int = 74,
-            transform: Optional[Callable] = None
+            random_seed: int = 86,
+            transform: Optional[Callable] = None,
+            target_transform: Optional[Callable] = None
     ):
         """
         :param root: the absolute path of data directory
@@ -36,7 +37,7 @@ class MaskDataset(VisionDataset):
         :param random_seed: seed for shuffle
         :param transform: transform to be applied to image
         """
-        super(MaskDataset, self).__init__(root, transform=transform)
+        super(MaskDataset, self).__init__(root, transform=transform, target_transform=target_transform)
         self.train = train
         self.num_folds = num_folds
         self.folds = folds
@@ -56,7 +57,8 @@ class MaskDataset(VisionDataset):
 
             # convert "gender", "age"
             meta_data_all["gender"] = meta_data_all["gender"].map(self._gender_to_gender_class)
-            meta_data_all["age"] = meta_data_all["age"].map(self._age_to_age_class)
+            # meta_data_all["age"] = meta_data_all["age"].map(self._age_to_age_class)
+            meta_data_all["age"] = meta_data_all["age"].map(self._age_to_age)
 
             # collect by class(gender, age)
             class_to_data_dict = defaultdict(list)
@@ -112,7 +114,7 @@ class MaskDataset(VisionDataset):
                 (
                     0  # MASK_CLASSES = ("mask", "incorrect_mask", "normal")
                     0,  # GENDERS = ("male", "female")
-                    1  # AGE_CLASSES = ("<30", ">=30 and <60", ">=60"),
+                    60  # age
                 )
         if not train (eval)
             image path
@@ -146,6 +148,9 @@ class MaskDataset(VisionDataset):
         else:
             target = info
 
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
         return img, target
 
     @classmethod
@@ -157,6 +162,16 @@ class MaskDataset(VisionDataset):
             return 1
         else:  # int_age >= 60
             return 2
+
+    @classmethod
+    def _age_to_age(cls, age):
+        int_age = int(age)
+        if int_age < 30:
+            return int_age
+        elif 30 <= int_age < 60:
+            return int_age
+        else:  # int_age >= 60
+            return age + 20
 
     @classmethod
     def _gender_to_gender_class(cls, gender):

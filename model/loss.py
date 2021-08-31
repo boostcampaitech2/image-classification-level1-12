@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
 
@@ -23,12 +24,12 @@ class MaskLoss(nn.Module):
 
         self.mask_loss_func = nn.CrossEntropyLoss(weight=mask_weight)
         self.gender_loss_func = nn.CrossEntropyLoss(weight=gender_weight)
-        self.age_loss_func = nn.CrossEntropyLoss(weight=age_weight)
+        self.age_loss_func = nn.MSELoss()
 
     def forward(self, x: Tuple[Tensor, Tensor, Tensor], target: Tuple[Tensor, Tensor, Tensor]) -> Tensor:
         mask_loss = self.mask_loss_func(x[0], target[0])
         gender_loss = self.gender_loss_func(x[1], target[1])
-        age_loss = self.age_loss_func(x[2], target[2])
+        age_loss = torch.mul(self.age_loss_func(x[2], target[2]), 0.015)
 
         total_loss = mask_loss + gender_loss + age_loss
         return total_loss

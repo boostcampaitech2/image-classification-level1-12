@@ -59,11 +59,14 @@ class MaskModel(nn.Module):
             nn.Linear(256, 2),
         )
 
-        self.classifier_age_fc = nn.Sequential(
+        self.regression_age_fc = nn.Sequential(
             nn.Linear(1024, 256),
             nn.ReLU(True),
             nn.Dropout(),
-            nn.Linear(256, 3),
+            nn.Linear(256, 256),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(256, 1),
         )
 
     def forward(self, x):
@@ -73,7 +76,7 @@ class MaskModel(nn.Module):
         x = self.classifier_common_fc(x)
         x_mask = self.classifier_mask_fc(x)
         x_gender = self.classifier_gender_fc(x)
-        x_age = self.classifier_age_fc(x)
+        x_age = self.regression_age_fc(x)
 
         return x_mask, x_gender, x_age
 
