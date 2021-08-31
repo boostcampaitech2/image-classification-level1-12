@@ -29,7 +29,7 @@ class MaskLoss(nn.Module):
     def forward(self, x: Tuple[Tensor, Tensor, Tensor], target: Tuple[Tensor, Tensor, Tensor]) -> Tensor:
         mask_loss = self.mask_loss_func(x[0], target[0])
         gender_loss = self.gender_loss_func(x[1], target[1])
-        age_loss = torch.mul(self.age_loss_func(x[2], target[2]), 0.015)
+        age_loss = torch.mul(self.age_loss_func(x[2], target[2]), 0.025)
 
         total_loss = mask_loss + gender_loss + age_loss
         return total_loss
