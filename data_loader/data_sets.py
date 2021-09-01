@@ -171,7 +171,7 @@ class MaskDataset(VisionDataset):
         elif 30 <= int_age < 60:
             return int_age
         else:  # int_age >= 60
-            return age + 20
+            return int_age + 10
 
     @classmethod
     def _gender_to_gender_class(cls, gender):
