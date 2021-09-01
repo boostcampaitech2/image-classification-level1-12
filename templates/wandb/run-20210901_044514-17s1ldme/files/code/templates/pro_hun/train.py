@@ -66,7 +66,8 @@ class Mask_Dataset(object):
 
 
     def __getitem__(self, idx):
-        img_path = self.df["path"][idx]
+        img_path = Path(self.df["path"][idx])
+        # img_path = self.df["path"][idx]
         target = self.df["label"][idx]
 
         img = cv2.imread(img_path)
@@ -76,6 +77,10 @@ class Mask_Dataset(object):
             augmented = self.transforms(image = img)
             img = augmented['image']
 
+        # img = Image.open(img_path).convert("RGB")
+
+        # if self.transforms is not None:
+        #     img = self.transforms(img)
 
         return img, target
 
@@ -167,6 +172,15 @@ if __name__ == "__main__":
         # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
     ])
 
+    # data_transform = transforms.Compose(
+    #     [
+    #         Resize((512, 384), Image.BILINEAR),
+    #         GaussianBlur(3, sigma=(0.1, 2)),
+    #         RandomHorizontalFlip(p=0.5),
+    #         ToTensor(),
+    #         Normalize(mean=args.normalize_mean, std=args.normalize_std),
+    #     ]
+    # )
 
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")

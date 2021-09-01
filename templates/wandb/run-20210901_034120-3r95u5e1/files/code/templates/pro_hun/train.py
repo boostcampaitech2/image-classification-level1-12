@@ -25,7 +25,7 @@ from torchvision import datasets, models, transforms
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50, resnet152
 from torchvision.transforms import Normalize, Resize, ToTensor
-from torchvision.transforms.transforms import GaussianBlur, RandomRotation, RandomHorizontalFlip, GaussianBlur
+from torchvision.transforms.transforms import GaussianBlur, RandomRotation, RandomHorizontalFlip
 
 from data_preprocessing.data_split import Run_Split
 from model.loss import batch_loss
@@ -66,16 +66,21 @@ class Mask_Dataset(object):
 
 
     def __getitem__(self, idx):
+        # img_path = Path(self.df["path"][idx])
         img_path = self.df["path"][idx]
         target = self.df["label"][idx]
 
-        img = cv2.imread(img_path)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = cv2.imread(img_path)
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # if self.transforms is not None:
+        #     augmented = self.transforms(image = img)
+        #     img = augmented['image']
+
+        img = Image.open(img_path).convert("RGB")
 
         if self.transforms is not None:
-            augmented = self.transforms(image = img)
-            img = augmented['image']
-
+            img = self.transforms(img)
 
         return img, target
 
@@ -152,21 +157,28 @@ if __name__ == "__main__":
     device = prepare_device()
     print(f"{device} is using!")
 
-    data_transform = albumentations.Compose([
-        albumentations.Resize(512, 384, cv2.INTER_LINEAR),
-        albumentations.GaussianBlur(3, sigma_limit=(0.1, 2)),
-        albumentations.Normalize(mean=args.normalize_mean, std=args.normalize_std),
-        albumentations.HorizontalFlip(p=0.5),
-        # albumentations.OneOf([
-    	# 	albumentations.HorizontalFlip(p=1),
-    	# 	albumentations.Rotate([-10, 10], p=1),
-        # ], p=0.5),
-        albumentations.pytorch.transforms.ToTensorV2(),
-        # albumentations.RandomCrop(224, 224),
-        # albumentations.RamdomCrop, CenterCrop, RandomRotation
-        # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
-    ])
+    # data_transform = albumentations.Compose([
+    #     albumentations.Resize(512, 384, cv2.INTER_LINEAR),
+    #     albumentations.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2)),
+    #     albumentations.OneOf([
+    # 		albumentations.HorizontalFlip(p=1),
+    # 		albumentations.Rotate([-10, 10], p=1),
+    #     ], p=0.5),
+    #     albumentations.pytorch.transforms.ToTensorV2(),
+    #     # albumentations.RandomCrop(224, 224),
+    #     # albumentations.RamdomCrop, CenterCrop, RandomRotation
+    #     # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
+    # ])
 
+    data_transform = transforms.Compose(
+        [
+            Resize((512, 384), Image.BILINEAR),
+            GaussianBlur(3, sigma=(0.1, 2)),
+            RandomHorizontalFlip(p=0.5),
+            ToTensor(),
+            Normalize(mean=args.normalize_mean, std=args.normalize_std),
+        ]
+    )
 
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
@@ -231,7 +243,7 @@ if __name__ == "__main__":
                     mnist_resnet.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
 
                 for ind, (images, labels) in enumerate(
-                    tqdm.tqdm(dataloaders[phase], leave=True)
+                    tqdm.tqdm(dataloaders[phase], leave=False)
                 ):
                     images = torch.stack(list(images), dim=0).to(device)
                     labels = torch.tensor(list(labels)).to(device)
@@ -261,6 +273,8 @@ if __name__ == "__main__":
                     n_iter += 1
                     if ind%100==0:
                         wandb.log({'loss':loss})
+                        wandb.log({'acc':running_acc})
+                        wandb.log({'f1_score':running_f1})
 
 
                 # 한 epoch이 모두 종료되었을 때,
@@ -294,12 +308,10 @@ if __name__ == "__main__":
                 # if early_ind == 2:
                 #     flag = False
                 #     break
-        break
         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
     ed_time = time.time()
-    # total_minute = (round(ed_time - st_time, 2)) // 60
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
     notification(best_test_accuracy)
