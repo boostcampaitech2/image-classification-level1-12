@@ -31,7 +31,7 @@ from data_preprocessing.data_split import Run_Split
 from model.loss import batch_loss
 from model.metric import batch_acc, batch_f1, epoch_mean
 from model.model import resnet_finetune, efficient_model
-from utils.util import ensure_dir, notification, prepare_device, fix_randomseed
+from utils.util import ensure_dir, notification, prepare_device, fix_randomseed, draw_confusion_matrix
 
 
 class FocalLoss(nn.Module):
@@ -240,6 +240,9 @@ if __name__ == "__main__":
 
                     optimizer.zero_grad()  # parameter gradient를 업데이트 전 초기화함
 
+                    # confusion matrix
+                    y_pred = np.array([])
+                    y_true = np.array([])
                     with torch.set_grad_enabled(
                         phase == TRAIN_FLAG
                     ):  # train 모드일 시에는 gradient를 계산하고, 아닐 때는 gradient를 계산하지 않아 연산량 최소화
@@ -247,13 +250,18 @@ if __name__ == "__main__":
                         _, preds = torch.max(
                             logits, 1
                         )  # 모델에서 linear 값으로 나오는 예측 값 ([0.9,1.2, 3.2,0.1,-0.1,...])을 최대 output index를 찾아 예측 레이블([2])로 변경함
-                        loss = loss_fn(logits, labels)
+                        loss = loss_fn(logits, labels)                        
 
                         if phase == TRAIN_FLAG:
                             loss.backward()  # 모델의 예측 값과 실제 값의 CrossEntropy 차이를 통해 gradient 계산
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
                             # lr_sched.step()
                             # lrs.append(optimizer.param_groups[0]["lr"])
+
+                        # confusion matrix
+                        y_true =  np.concatenate([y_true, labels.cpu().view(-1).numpy()])
+                        y_pred = np.concatenate([y_pred, preds.cpu().view(-1).numpy()])
+                    draw_confusion_matrix(y_true, y_pred)
 
                     running_loss += batch_loss(loss, images)  # 한 Batch에서의 loss 값 저장
                     running_acc+= batch_acc(

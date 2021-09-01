@@ -3,6 +3,10 @@ import sys
 from pathlib import Path
 import numpy as np
 import random
+from sklearn.metrics import confusion_matrix
+import seaborn as sn
+import pandas as pd
+import matplotlib.pyplot as plt
 
 import requests
 import torch
@@ -52,3 +56,18 @@ def notification(best_acc):
     response = requests.post(url, data=json.dumps(slack_data), headers=headers)
     if response.status_code != 200:
         raise Exception(response.status_code, response.text)
+
+
+def draw_confusion_matrix(self, target, pred):
+        cm = confusion_matrix(target, pred)
+        df = pd.DataFrame(cm/np.sum(cm, axis=1)[:, None], 
+					index=list(range(18)), columns=list(range(18)))
+        df = df.fillna(0)  # NaN 값을 0으로 변경
+
+        plt.figure(figsize=(16, 16))
+        plt.tight_layout()
+        plt.suptitle('Confusion Matrix')
+        sn.heatmap(df, annot=True, cmap=sn.color_palette("Blues"))
+        plt.xlabel("Predicted Label")
+        plt.ylabel("True label")
+        plt.savefig("confusion_matrix.png")
