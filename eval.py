@@ -62,7 +62,7 @@ def main(config):
     loss_fn = MaskLoss()
     metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
-    checkpoint_file_path = "/tmp/PycharmProjects/image-classification-level1-12_hwang/saved/models/Mask_vgg19_lin2/0901_014450/checkpoint-epoch12.pth"
+    checkpoint_file_path = "/tmp/PycharmProjects/image-classification-level1-12_hwang/saved/models/Mask_vgg19_lin2/0901_063238/model_best.pth"
     logger.info('Loading checkpoint: {} ...'.format(checkpoint_file_path))
     checkpoint = torch.load(checkpoint_file_path)
     state_dict = checkpoint['state_dict']
@@ -88,7 +88,7 @@ def main(config):
     # 제출할 파일을 저장합니다.
     submission = pd.read_csv("/opt/ml/mask_data/eval/info.csv")
     submission['ans'] = all_predictions
-    submission.to_csv('./saved/submission/submission_0901_014450_12.csv', index=False)
+    submission.to_csv('./saved/submission/submission_0901_063238_39.csv', index=False)
     # epoch: 3
     # loss: 0.2146139108273299
     # mask_total_accuracy: 0.9237868785858154

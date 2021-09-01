@@ -1,5 +1,7 @@
 import argparse
 import collections
+import random
+
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -35,15 +37,42 @@ def main(config):
         transforms.CenterCrop((384, 288)),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.ToTensor(),
-        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2))
     ])
     valid_transform = transforms.Compose([
         # transforms.Scale(244),
         transforms.CenterCrop((384, 288)),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.ToTensor(),
-        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.2, 0.2, 0.2))
     ])
+
+    def collate_fn(batch):
+        age60_data_list = list()
+        age_under60_data_list = list()
+        for image, target in batch:
+            if target[2] > 59.5:
+                age60_data_list.append((image, target))
+            else:
+                age_under60_data_list.append((image, target))
+
+        len_60 = len(age60_data_list)
+        len_under60 = len(age_under60_data_list)
+
+        # undersampling 필요 없는 경우
+        if len_under60 <= len_60 * 2:
+            return torch.utils.data.dataloader.default_collate(batch)
+
+        # batch_size 0 방지
+        if len_60 < 1:
+            return torch.utils.data.dataloader.default_collate([batch[0]])
+
+        selected_idx_list = np.random.choice(len_under60, len_60 * 2, replace=False)
+        undersampled_batch = [age_under60_data_list[idx] for idx in selected_idx_list]
+        undersampled_batch.extend(age60_data_list)
+        random.shuffle(undersampled_batch)
+
+        return torch.utils.data.dataloader.default_collate(undersampled_batch)
 
     # setup data_loader instances
     # data_loader = config.init_obj('data_loader', module_data)
@@ -61,13 +90,14 @@ def main(config):
                                 transform=valid_transform
                                 )
     train_data_loader = DataLoader(train_dataset,
-                                   batch_size=4,
+                                   batch_size=64,
                                    shuffle=True,
-                                   num_workers=16)
+                                   num_workers=2,
+                                   collate_fn=collate_fn)
     valid_data_loader = DataLoader(valid_dataset,
                                    batch_size=64,
                                    shuffle=True,
-                                   num_workers=4)
+                                   num_workers=2)
 
 
 
