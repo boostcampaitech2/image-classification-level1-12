@@ -178,9 +178,9 @@ if __name__ == "__main__":
     st_time = time.time()
     for i in range(fold_num):
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
-        mnist_resnet = resnet_finetune(resnet18, 18).to(device)
+        # mnist_resnet = resnet_finetune(resnet18, 18).to(device)
+        mnist_resnet = efficient_model('efficientnet-b2', 18).to(device)
         wandb.watch(mnist_resnet)
-        # mnist_resnet = efficient_model('efficientnet-b0', 18).to(device)
 
         # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
         loss_fn = FocalLoss()
@@ -259,9 +259,9 @@ if __name__ == "__main__":
                             # lrs.append(optimizer.param_groups[0]["lr"])
 
                         # confusion matrix
-                        y_true =  np.concatenate([y_true, labels.cpu().view(-1).numpy()])
-                        y_pred = np.concatenate([y_pred, preds.cpu().view(-1).numpy()])
-                    draw_confusion_matrix(y_true, y_pred)
+                    #     y_true =  np.concatenate([y_true, labels.cpu().view(-1).numpy()])
+                    #     y_pred = np.concatenate([y_pred, preds.cpu().view(-1).numpy()])
+                    # draw_confusion_matrix(y_true, pred=y_pred)
 
                     running_loss += batch_loss(loss, images)  # 한 Batch에서의 loss 값 저장
                     running_acc+= batch_acc(
