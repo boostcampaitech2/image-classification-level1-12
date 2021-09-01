@@ -27,6 +27,7 @@ wheels/
 pro_hun/output/**
 **/MY_FONT/**
 **/MY_FONT.zip
+**/wandb/**
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
