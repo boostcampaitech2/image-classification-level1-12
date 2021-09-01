@@ -231,7 +231,7 @@ if __name__ == "__main__":
                     mnist_resnet.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
 
                 for ind, (images, labels) in enumerate(
-                    tqdm.tqdm(dataloaders[phase], leave=False)
+                    tqdm.tqdm(dataloaders[phase], leave=True)
                 ):
                     images = torch.stack(list(images), dim=0).to(device)
                     labels = torch.tensor(list(labels)).to(device)
@@ -280,6 +280,7 @@ if __name__ == "__main__":
                     phase == TEST_FLAG and best_test_loss > epoch_loss
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
+# e84afda8fca20c9a59d30a4768eec5aabd27135f
                 # Early Stopping Code
                 # if phase == TEST_FLAG:
                 #     if pred_f1 <= epoch_f1:

@@ -231,7 +231,7 @@ if __name__ == "__main__":
                     mnist_resnet.eval()  # 네트워크 모델을 eval 모드 두어 여러 sub module들이 eval mode로 작동할 수 있게 함
 
                 for ind, (images, labels) in enumerate(
-                    tqdm.tqdm(dataloaders[phase], leave=False)
+                    tqdm.tqdm(dataloaders[phase], leave=True)
                 ):
                     images = torch.stack(list(images), dim=0).to(device)
                     labels = torch.tensor(list(labels)).to(device)
@@ -280,6 +280,7 @@ if __name__ == "__main__":
                     phase == TEST_FLAG and best_test_loss > epoch_loss
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
+# e84afda8fca20c9a59d30a4768eec5aabd27135f
                 # Early Stopping Code
                 # if phase == TEST_FLAG:
                 #     if pred_f1 <= epoch_f1:
@@ -293,10 +294,12 @@ if __name__ == "__main__":
                 # if early_ind == 2:
                 #     flag = False
                 #     break
+        break
         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
     ed_time = time.time()
+    # total_minute = (round(ed_time - st_time, 2)) // 60
     total_minute = (round(ed_time - st_time, 2)) // 60
     print(f"총 학습 시간 : {total_minute}분 소요되었습니다.")
     notification(best_test_accuracy)

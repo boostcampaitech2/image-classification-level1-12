@@ -1,0 +1,9 @@
+diff --git a/templates/wandb/latest-run b/templates/wandb/latest-run
+index de08289..4dc0d8d 120000
+--- a/templates/wandb/latest-run
++++ b/templates/wandb/latest-run
+@@ -1 +1 @@
+-run-20210901_044542-25ac32g2
+\ No newline at end of file
++run-20210901_050325-1hovw4yn
+\ No newline at end of file
