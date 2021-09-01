@@ -61,9 +61,9 @@ def main(config):
                                 transform=valid_transform
                                 )
     train_data_loader = DataLoader(train_dataset,
-                                   batch_size=64,
+                                   batch_size=4,
                                    shuffle=True,
-                                   num_workers=4)
+                                   num_workers=16)
     valid_data_loader = DataLoader(valid_dataset,
                                    batch_size=64,
                                    shuffle=True,

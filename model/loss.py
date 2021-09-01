@@ -18,18 +18,36 @@ def nll_loss(output, target):
 #     return total_loss
 
 
+class AgeMSELoss(nn.Module):
+    def __init__(self, lt60_weight: float = 1., gte60_weight: float = 6.):
+        super().__init__()
+        self.lt60_weight = lt60_weight
+        self.gte60_weight = gte60_weight
+
+        self.mse_loss = nn.MSELoss(reduction='none')
+
+    def forward(self, output: Tensor, target: Tensor):
+        weight = torch.heaviside(target.sub(59.5), torch.tensor([0.]).to(target.device))\
+            .mul(self.gte60_weight - self.lt60_weight).add(self.lt60_weight)
+        mse_loss_val = self.mse_loss(output, target)
+        weighted_mse_loss_val = mse_loss_val.mul(weight)
+        mean_weighted_mse_loss_val = torch.mean(weighted_mse_loss_val, dim=0)
+        return mean_weighted_mse_loss_val
+
+
 class MaskLoss(nn.Module):
     def __init__(self, mask_weight: Tensor = None, gender_weight: Tensor = None, age_weight: Tensor = None):
         super().__init__()
 
         self.mask_loss_func = nn.CrossEntropyLoss(weight=mask_weight)
         self.gender_loss_func = nn.CrossEntropyLoss(weight=gender_weight)
-        self.age_loss_func = nn.MSELoss()
+        # self.age_loss_func = nn.MSELoss()
+        self.age_loss_func = AgeMSELoss(lt60_weight=1., gte60_weight=6.)
 
     def forward(self, x: Tuple[Tensor, Tensor, Tensor], target: Tuple[Tensor, Tensor, Tensor]) -> Tensor:
         mask_loss = self.mask_loss_func(x[0], target[0])
         gender_loss = self.gender_loss_func(x[1], target[1])
-        age_loss = torch.mul(self.age_loss_func(x[2], target[2]), 0.025)
+        age_loss = torch.mul(self.age_loss_func(x[2], target[2]), 0.04)
 
         total_loss = mask_loss + gender_loss + age_loss
         return total_loss

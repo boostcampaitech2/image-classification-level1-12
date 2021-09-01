@@ -5,7 +5,6 @@ import torch
 from torch import Tensor
 
 
-
 def age_to_age_class(age: Tensor):
     age_round = age.round()
     age_class = torch.where(age_round < 29.5, torch.full_like(age_round, 0, device=age_round.device), age_round)
