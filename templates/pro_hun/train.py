@@ -24,7 +24,7 @@ from torchvision import datasets, models, transforms
 from torchvision.models import resnet18
 from torchvision.models.resnet import resnet50, resnet152
 from torchvision.transforms import Normalize, Resize, ToTensor
-from torchvision.transforms.transforms import GaussianBlur, RandomRotation
+from torchvision.transforms.transforms import GaussianBlur, RandomRotation, RandomHorizontalFlip
 
 from data_preprocessing.data_split import Run_Split
 from model.loss import batch_loss
@@ -170,7 +170,7 @@ if __name__ == "__main__":
         [
             Resize((512, 384), Image.BILINEAR),
             # GaussianBlur(3, sigma=(0.1, 2)),
-            # RandomRotation([-8, +8]),
+            # RandomHorizontalFlip(p=0.5),
             ToTensor(),
             Normalize(mean=args.normalize_mean, std=args.normalize_std),
         ]
@@ -186,8 +186,8 @@ if __name__ == "__main__":
     st_time = time.time()
     for i in range(fold_num):
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
-        # mnist_resnet = resnet_finetune(resnet18, 18).to(device)
-        mnist_resnet = efficient_model('efficientnet-b0', 18).to(device)
+        mnist_resnet = resnet_finetune(resnet18, 18).to(device)
+        # mnist_resnet = efficient_model('efficientnet-b0', 18).to(device)
 
         # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
         loss_fn = FocalLoss()
