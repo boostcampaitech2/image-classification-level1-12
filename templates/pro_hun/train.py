@@ -186,6 +186,8 @@ if __name__ == "__main__":
         loss_fn = FocalLoss()
         # weight 업데이트를 위한 optimizer를 Adam으로 사용함
         optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
+        lr_sched = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=1, eta_min=0.001, last_epoch=-1)
+        lrs = []
 
         train_dataset = Mask_Dataset(
             data_transform, f"train{i}", train_list[i], train_path, args.image_folder
@@ -250,6 +252,8 @@ if __name__ == "__main__":
                         if phase == TRAIN_FLAG:
                             loss.backward()  # 모델의 예측 값과 실제 값의 CrossEntropy 차이를 통해 gradient 계산
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
+                            lr_sched.step()
+                            lrs.append(optimizer.param_groups[0]["lr"])
 
                     running_loss += batch_loss(loss, images)  # 한 Batch에서의 loss 값 저장
                     running_acc+= batch_acc(
@@ -261,6 +265,7 @@ if __name__ == "__main__":
                     n_iter += 1
                     if ind%100==0:
                         wandb.log({'loss':loss})
+                        wandb.log({'lr':lrs[-1]})
 
 
                 # 한 epoch이 모두 종료되었을 때,
