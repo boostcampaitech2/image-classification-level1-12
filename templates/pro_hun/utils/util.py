@@ -1,15 +1,15 @@
 import json
+import random
 import sys
 from pathlib import Path
-import numpy as np
-import random
-from sklearn.metrics import confusion_matrix
-import seaborn as sn
-import pandas as pd
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import requests
+import seaborn as sn
 import torch
+from sklearn.metrics import confusion_matrix
 
 
 def ensure_dir(dirname):
@@ -35,7 +35,6 @@ def fix_randomseed(seed):
     random.seed(seed)
 
 
-
 def notification(best_acc):
     url = "https://hooks.slack.com/services/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"  # 웹후크 URL 입력
     message = "학습이 완료되었습니다!!! {best_acc}"  # 메세지 입력
@@ -47,7 +46,13 @@ def notification(best_acc):
         "attachments": [
             {
                 "color": "#9733EE",
-                "fields": [{"title": title, "value": message, "short": "false",}],
+                "fields": [
+                    {
+                        "title": title,
+                        "value": message,
+                        "short": "false",
+                    }
+                ],
             }
         ],
     }
@@ -59,15 +64,16 @@ def notification(best_acc):
 
 
 def draw_confusion_matrix(self, target, pred):
-        cm = confusion_matrix(target, pred)
-        df = pd.DataFrame(cm/np.sum(cm, axis=1)[:, None], 
-					index=list(range(18)), columns=list(range(18)))
-        df = df.fillna(0)  # NaN 값을 0으로 변경
+    cm = confusion_matrix(target, pred)
+    df = pd.DataFrame(
+        cm / np.sum(cm, axis=1)[:, None], index=list(range(18)), columns=list(range(18))
+    )
+    df = df.fillna(0)  # NaN 값을 0으로 변경
 
-        plt.figure(figsize=(16, 16))
-        plt.tight_layout()
-        plt.suptitle('Confusion Matrix')
-        sn.heatmap(df, annot=True, cmap=sn.color_palette("Blues"))
-        plt.xlabel("Predicted Label")
-        plt.ylabel("True label")
-        plt.savefig("confusion_matrix.png")
+    plt.figure(figsize=(16, 16))
+    plt.tight_layout()
+    plt.suptitle("Confusion Matrix")
+    sn.heatmap(df, annot=True, cmap=sn.color_palette("Blues"))
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True label")
+    plt.savefig("confusion_matrix.png")
