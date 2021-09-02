@@ -77,7 +77,7 @@
 ├── base
 │  └── baseline.ipynb       # Introduction & EDA Baseline
 ├── data_preprocessing
-│  ├── data_labeling.py     # Data labeling(18 classes&Error Fix)
+│  ├── data_labeling.py     # Data labeling(18 classes)
 │  ├── data_split.py        # Apply StratifiedKFold
 │  └── image_crop.ipynb     # Crop face by cvlib
 ├── experiment
