@@ -114,12 +114,13 @@ pro_hun/
 * wandb==0.12.1
 
 ### Install Requirements
-
+```
 `pip install -r requirements.txt`
-
+```
 ### Training
-
+```
 `python train.py [-lr] [-bs] [--epoch] [--train_path] [--model_save] [--image_data] [--image_dir]`
+```
 
 * `-lr` : learning rate, default=0.0001
 * `-bs` : batch size, default=128
@@ -130,8 +131,9 @@ pro_hun/
 * `--image_dir` : Directory according to image type, default='ori_image_all'
 
 ### Evaluation
-
+```
 `python test.py [--test_path] [--result_save] [--image_dir]` 
+```
 
 * `--test_path` : test_directory_path
 * `--result_save` : submission_save_path
