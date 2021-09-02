@@ -24,7 +24,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-pro_hun/output/**
+output/**
 **/MY_FONT/**
 **/MY_FONT.zip
 **/wandb/**
