@@ -1,24 +1,18 @@
 import argparse
 import datetime as dt
 import os
-import random
 import time
 
 import albumentations
 import albumentations.pytorch
 import cv2
-import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
-from PIL import Image
 from pytz import timezone
 from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
-from torchvision.transforms import Normalize, Resize, ToTensor
 from tqdm.notebook import tqdm
-
-from utils.util import prepare_device, fix_randomseed
+from utils.util import fix_randomseed, prepare_device
 
 
 class TestDataset(Dataset):
@@ -32,9 +26,8 @@ class TestDataset(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         if self.transform is not None:
-            augmented = self.transform(image = image)
-            image = augmented['image']
-
+            augmented = self.transform(image=image)
+            image = augmented["image"]
 
         return image
 
@@ -82,21 +75,17 @@ if __name__ == "__main__":
     # Test Dataset 클래스 객체를 생성하고 DataLoader를 만듭니다.
     image_paths = [os.path.join(image_dir, img_id) for img_id in submission.ImageID]
 
-
-    transform = albumentations.Compose([
-        albumentations.Resize(512, 384, cv2.INTER_LINEAR),
-        albumentations.GaussianBlur(3, sigma_limit=(0.1, 2)),
-        albumentations.Normalize(mean=args.normalize_mean, std=args.normalize_std),
-        albumentations.HorizontalFlip(p=0.5),
-        # albumentations.OneOf([
-    	# 	albumentations.HorizontalFlip(p=1),
-    	# 	albumentations.Rotate([-10, 10], p=1),
-        # ], p=0.5),
-        albumentations.pytorch.transforms.ToTensorV2(),
-        # albumentations.RandomCrop(224, 224),
-        # albumentations.RamdomCrop, CenterCrop, RandomRotation
-        # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
-    ])
+    transform = albumentations.Compose(
+        [
+            albumentations.Resize(512, 384, cv2.INTER_LINEAR),
+            albumentations.GaussianBlur(3, sigma_limit=(0.1, 2)),
+            albumentations.Normalize(mean=args.normalize_mean, std=args.normalize_std),
+            albumentations.HorizontalFlip(
+                p=0.5
+            ),  # Same with transforms.RandomHorizontalFlip()
+            albumentations.pytorch.transforms.ToTensorV2(),
+        ]
+    )
 
     dataset = TestDataset(image_paths, transform)
     loader = DataLoader(dataset, shuffle=False, num_workers=2)

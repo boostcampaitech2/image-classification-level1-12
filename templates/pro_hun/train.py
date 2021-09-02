@@ -2,7 +2,6 @@ import argparse
 import datetime as dt
 import os
 import time
-import wandb
 
 import albumentations
 import albumentations.pytorch
@@ -12,20 +11,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import tqdm
-from pytz import timezone
-from torch.utils.data import DataLoader
-from torchvision.models import resnet18
-
 from data_preprocessing.data_split import Run_Split
 from model.loss import batch_loss
 from model.metric import batch_acc, batch_f1, epoch_mean
 from model.model import resnet_finetune
-from utils.util import ensure_dir, notification, prepare_device, fix_randomseed
+from pytz import timezone
+from torch.utils.data import DataLoader
+from torchvision.models import resnet18
+from utils.util import ensure_dir, fix_randomseed, notification, prepare_device
+
+import wandb
 
 
 class FocalLoss(nn.Module):
-    def __init__(self, weight=None,
-                 gamma=2., reduction='mean'):
+    def __init__(self, weight=None, gamma=2.0, reduction="mean"):
         nn.Module.__init__(self)
         self.weight = weight
         self.gamma = gamma
@@ -38,7 +37,7 @@ class FocalLoss(nn.Module):
             ((1 - prob) ** self.gamma) * log_prob,
             target_tensor,
             weight=self.weight,
-            reduction=self.reduction
+            reduction=self.reduction,
         )
 
 
@@ -53,7 +52,6 @@ class Mask_Dataset(object):
         )
         self.df = df
 
-
     def __getitem__(self, idx):
         img_path = self.df["path"][idx]
         target = self.df["label"][idx]
@@ -62,9 +60,8 @@ class Mask_Dataset(object):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         if self.transforms is not None:
-            augmented = self.transforms(image = img)
-            img = augmented['image']
-
+            augmented = self.transforms(image=img)
+            img = augmented["image"]
 
         return img, target
 
@@ -78,7 +75,7 @@ def collate_fn(batch):
 
 if __name__ == "__main__":
     torch.cuda.empty_cache()
-    wandb.init(project='Mask_classification', entity='herjh0405')
+    wandb.init(project="Mask_classification", entity="herjh0405")
     args = argparse.ArgumentParser(description="PyTorch Template")
     args.add_argument(
         "-lr",
@@ -124,7 +121,12 @@ if __name__ == "__main__":
         help="Use Original or Original+Crop",
     )
     # Original:image_folder, Crop:image_crop_all
-    args.add_argument("--image_folder", default="image_all", type=str, help="Split_image folder",)
+    args.add_argument(
+        "--image_folder",
+        default="image_all",
+        type=str,
+        help="Split_image folder",
+    )
 
     args = args.parse_args()
     config = wandb.config
@@ -141,15 +143,18 @@ if __name__ == "__main__":
     device = prepare_device()
     print(f"{device} is using!")
 
-    data_transform = albumentations.Compose([
-        # albumentations.Resize(512, 384, cv2.INTER_LINEAR),
-        albumentations.Resize(224, 224, cv2.INTER_LINEAR),
-        albumentations.GaussianBlur(3, sigma_limit=(0.1, 2)),
-        albumentations.Normalize(mean=args.normalize_mean, std=args.normalize_std),
-        albumentations.HorizontalFlip(p=0.5), # Same with transforms.RandomHorizontalFlip()
-        albumentations.pytorch.transforms.ToTensorV2(),
-    ])
-
+    data_transform = albumentations.Compose(
+        [
+            # albumentations.Resize(512, 384, cv2.INTER_LINEAR),
+            albumentations.Resize(224, 224, cv2.INTER_LINEAR),
+            albumentations.GaussianBlur(3, sigma_limit=(0.1, 2)),
+            albumentations.Normalize(mean=args.normalize_mean, std=args.normalize_std),
+            albumentations.HorizontalFlip(
+                p=0.5
+            ),  # Same with transforms.RandomHorizontalFlip()
+            albumentations.pytorch.transforms.ToTensorV2(),
+        ]
+    )
 
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
@@ -169,7 +174,6 @@ if __name__ == "__main__":
         # weight 업데이트를 위한 optimizer를 Adam으로 사용함
         optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
 
-
         train_dataset = Mask_Dataset(
             data_transform, f"train{i}", train_list[i], train_path, args.image_folder
         )
@@ -179,23 +183,24 @@ if __name__ == "__main__":
             # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
-             num_workers=4
+            num_workers=4,
         )
-        val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path, args.image_folder)
+        val_dataset = Mask_Dataset(
+            data_transform, f"val{i}", val_list[i], train_path, args.image_folder
+        )
         val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,
             collate_fn=collate_fn,
-             num_workers=4
+            num_workers=4,
         )
 
         dataloaders = {"train": train_loader, "test": val_loader}
-        TRAIN_FLAG = 'train'
-        TEST_FLAG = 'test'
+        TRAIN_FLAG = "train"
+        TEST_FLAG = "test"
         ### 학습 코드 시작
         best_test_accuracy = 0.0
         best_test_loss = 9999.0
-
 
         for epoch in range(args.epoch):
             for phase in [TRAIN_FLAG, TEST_FLAG]:
@@ -217,7 +222,6 @@ if __name__ == "__main__":
 
                     optimizer.zero_grad()  # parameter gradient를 업데이트 전 초기화함
 
-
                     with torch.set_grad_enabled(
                         phase == TRAIN_FLAG
                     ):  # train 모드일 시에는 gradient를 계산하고, 아닐 때는 gradient를 계산하지 않아 연산량 최소화
@@ -225,24 +229,23 @@ if __name__ == "__main__":
                         _, preds = torch.max(
                             logits, 1
                         )  # 모델에서 linear 값으로 나오는 예측 값 ([0.9,1.2, 3.2,0.1,-0.1,...])을 최대 output index를 찾아 예측 레이블([2])로 변경함
-                        loss = loss_fn(logits, labels)                        
+                        loss = loss_fn(logits, labels)
 
                         if phase == TRAIN_FLAG:
                             loss.backward()  # 모델의 예측 값과 실제 값의 CrossEntropy 차이를 통해 gradient 계산
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
 
-
                     running_loss += batch_loss(loss, images)  # 한 Batch에서의 loss 값 저장
-                    running_acc+= batch_acc(
+                    running_acc += batch_acc(
                         preds, labels.data
                     )  # 한 Batch에서의 Accuracy 값 저장
                     running_f1 += batch_f1(
                         preds.cpu().numpy(), labels.cpu().numpy(), "macro"
                     )
                     n_iter += 1
-                    if ind%100==0:
-                        wandb.log({'loss':loss})
-                        wandb.log({'lr':args.learning_rate})
+                    if ind % 100 == 0:
+                        wandb.log({"loss": loss})
+                        wandb.log({"lr": args.learning_rate})
 
                 # 한 epoch이 모두 종료되었을 때,
                 data_len = len(dataloaders[phase].dataset)
@@ -262,7 +265,6 @@ if __name__ == "__main__":
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
 
-                    
         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
