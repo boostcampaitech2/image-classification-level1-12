@@ -1,7 +1,6 @@
 import math
 
 import torch.nn as nn
-import timm
 
 
 def resnet_finetune(model, classes):
@@ -33,15 +32,3 @@ def resnet_finetune(model, classes):
     # model.fc2 = nn.Linear(in_features=128, out_features=classes, bias=True)
 
     return model
-
-
-
-class effinetB3(nn.Module):
-    def __init__(self, n_classes:int = 18):
-        super().__init__()
-        self.backbone = timm.create_model('efficientnet_b3', pretrained=True)
-        self.backbone.classifier = nn.Linear(in_features=1536, out_features=18, bias=True)
-        #add dropout
-    def forward(self, x):
-        x = self.backbone(x)
-        return x

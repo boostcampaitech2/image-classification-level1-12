@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import tqdm
 from data_preprocessing.data_split import Run_Split
-from model.loss import batch_loss
+from model.loss import batch_loss, FocalLoss
 from model.metric import batch_acc, batch_f1, epoch_mean
 from model.model import resnet_finetune
 from pytz import timezone
@@ -21,24 +21,6 @@ from torchvision.models import resnet18
 from utils.util import ensure_dir, fix_randomseed, notification, prepare_device
 
 import wandb
-
-
-class FocalLoss(nn.Module):
-    def __init__(self, weight=None, gamma=2.0, reduction="mean"):
-        nn.Module.__init__(self)
-        self.weight = weight
-        self.gamma = gamma
-        self.reduction = reduction
-
-    def forward(self, input_tensor, target_tensor):
-        log_prob = F.log_softmax(input_tensor, dim=-1)
-        prob = torch.exp(log_prob)
-        return F.nll_loss(
-            ((1 - prob) ** self.gamma) * log_prob,
-            target_tensor,
-            weight=self.weight,
-            reduction=self.reduction,
-        )
 
 
 class Mask_Dataset(object):
@@ -120,9 +102,9 @@ if __name__ == "__main__":
         type=str,
         help="Use Original or Original+Crop",
     )
-    # Original:image_folder, Crop:image_crop_all
+    # Original:image_all, Crop:image_crop_all
     args.add_argument(
-        "--image_folder",
+        "--image_dir",
         default="image_all",
         type=str,
         help="Split_image folder",
@@ -135,7 +117,7 @@ if __name__ == "__main__":
 
     train_path = args.train_path
     train_label = pd.read_csv(os.path.join(train_path, args.image_data))
-    run_split = Run_Split(os.path.join(train_path, args.image_folder))
+    run_split = Run_Split(os.path.join(train_path, args.image_dir))
     fold_num = args.fold_size
     train_list, val_list = run_split.train_val_split(train_label, fold_num)
 
@@ -145,8 +127,7 @@ if __name__ == "__main__":
 
     data_transform = albumentations.Compose(
         [
-            # albumentations.Resize(512, 384, cv2.INTER_LINEAR),
-            albumentations.Resize(224, 224, cv2.INTER_LINEAR),
+            albumentations.Resize(512, 384, cv2.INTER_LINEAR),
             albumentations.GaussianBlur(3, sigma_limit=(0.1, 2)),
             albumentations.Normalize(mean=args.normalize_mean, std=args.normalize_std),
             albumentations.HorizontalFlip(
@@ -175,7 +156,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
 
         train_dataset = Mask_Dataset(
-            data_transform, f"train{i}", train_list[i], train_path, args.image_folder
+            data_transform, f"train{i}", train_list[i], train_path, args.image_dir
         )
         train_loader = DataLoader(
             train_dataset,
@@ -183,16 +164,14 @@ if __name__ == "__main__":
             # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
-            num_workers=4,
         )
         val_dataset = Mask_Dataset(
-            data_transform, f"val{i}", val_list[i], train_path, args.image_folder
+            data_transform, f"val{i}", val_list[i], train_path, args.image_dir
         )
         val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,
             collate_fn=collate_fn,
-            num_workers=4,
         )
 
         dataloaders = {"train": train_loader, "test": val_loader}
