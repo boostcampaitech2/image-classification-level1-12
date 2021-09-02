@@ -153,7 +153,7 @@ if __name__ == "__main__":
     print(f"{device} is using!")
 
     data_transform = albumentations.Compose([
-        albumentations.Resize(512, 384, cv2.INTER_LINEAR),
+        albumentations.Resize(224, 224, cv2.INTER_LINEAR),
         albumentations.GaussianBlur(3, sigma_limit=(0.1, 2)),
         albumentations.Normalize(mean=args.normalize_mean, std=args.normalize_std),
         albumentations.HorizontalFlip(p=0.5),
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     st_time = time.time()
     for i in range(fold_num):
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
-        mnist_resnet = resnet_finetune(resnet34, 18).to(device)
+        mnist_resnet = resnet_finetune(resnet18, 18).to(device)
         # mnist_resnet = effinetB3()
         wandb.watch(mnist_resnet)
 
@@ -198,14 +198,14 @@ if __name__ == "__main__":
             # 배치마다 어떤 작업을 해주고 싶을 때, 이미지 크기가 서로 맞지 않는 경우 맞춰줄 때 사용
             collate_fn=collate_fn,
             # 마지막 남은 데이터가 배치 사이즈보다 작을 경우 무시
-            #  num_workers=2
+             num_workers=4
         )
         val_dataset = Mask_Dataset(data_transform, f"val{i}", val_list[i], train_path, args.image_folder)
         val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,
             collate_fn=collate_fn,
-            #  num_workers=2
+             num_workers=4
         )
 
         dataloaders = {"train": train_loader, "test": val_loader}
@@ -215,12 +215,12 @@ if __name__ == "__main__":
         best_test_accuracy = 0.0
         best_test_loss = 9999.0
 
-        flag = True
-        early_ind = 0
-        pred_f1 = 0.0
+        # flag = True
+        # early_ind = 0
+        # pred_f1 = 0.0
         for epoch in range(args.epoch):
-            if not (flag):
-                break
+            # if not (flag):
+            #     break
             for phase in [TRAIN_FLAG, TEST_FLAG]:
                 n_iter = 0
                 running_loss = 0.0
@@ -241,8 +241,8 @@ if __name__ == "__main__":
                     optimizer.zero_grad()  # parameter gradient를 업데이트 전 초기화함
 
                     # confusion matrix
-                    y_pred = np.array([])
-                    y_true = np.array([])
+                    # y_pred = np.array([])
+                    # y_true = np.array([])
                     with torch.set_grad_enabled(
                         phase == TRAIN_FLAG
                     ):  # train 모드일 시에는 gradient를 계산하고, 아닐 때는 gradient를 계산하지 않아 연산량 최소화
@@ -294,18 +294,18 @@ if __name__ == "__main__":
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
                 # Early Stopping Code
-                if phase == TEST_FLAG:
-                    if pred_f1 <= epoch_f1:
-                        pred_f1 = epoch_f1
-                        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
-                        print(f"{epoch}번째 모델 저장!")
-                        early_ind = 0
-                    else:
-                        print(f"{epoch}번째 모델 pass")
-                early_ind += 1
-                if early_ind == 2:
-                    flag = False
-                    break
+                # if phase == TEST_FLAG:
+                #     if pred_f1 <= epoch_f1:
+                #         pred_f1 = epoch_f1
+                #         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
+                #         print(f"{epoch}번째 모델 저장!")
+                #         early_ind = 0
+                #     else:
+                #         print(f"{epoch}번째 모델 pass")
+                # early_ind += 1
+                # if early_ind == 2:
+                #     flag = False
+                #     break
         # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
