@@ -41,13 +41,13 @@ if __name__ == "__main__":
         "--test_path",
         default="/opt/ml/image-classification-level1-12/templates/data/eval",
         type=str,
-        help="test_path",
+        help="eval_dir_path",
     )
     args.add_argument(
         "--result_save",
         default="/opt/ml/image-classification-level1-12/templates/pro_hun/output/sub",
         type=str,
-        help="result_save_path",
+        help="submission_save_path",
     )
     args.add_argument(
         "--normalize_mean",

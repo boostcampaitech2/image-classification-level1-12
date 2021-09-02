@@ -75,7 +75,7 @@ if __name__ == "__main__":
         "--train_path",
         default="/opt/ml/image-classification-level1-12/templates/data/train",
         type=str,
-        help="train_path",
+        help="train_directory_path",
     )
     args.add_argument(
         "--model_save",
@@ -98,9 +98,9 @@ if __name__ == "__main__":
     # Original:train_with_label.csv, Crop:train_with_crop.csv
     args.add_argument(
         "--image_data",
-        default="train_with_label.csv",
+        default="train_with_all.csv",
         type=str,
-        help="Use Original or Original+Crop",
+        help="CSV according to image type(Original, Crop, All)",
     )
     # Original:image_all, Crop:image_crop_all
     args.add_argument(
