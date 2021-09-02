@@ -115,11 +115,11 @@ pro_hun/
 
 ### Install Requirements
 ```
-`pip install -r requirements.txt`
+$ pip install -r requirements.txt
 ```
 ### Training
 ```
-`python train.py [-lr] [-bs] [--epoch] [--train_path] [--model_save] [--image_data] [--image_dir]`
+$ python train.py [-lr] [-bs] [--epoch] [--train_path] [--model_save] [--image_data] [--image_dir]
 ```
 
 * `-lr` : learning rate, default=0.0001
@@ -132,7 +132,7 @@ pro_hun/
 
 ### Evaluation
 ```
-`python test.py [--test_path] [--result_save] [--image_dir]` 
+$ python test.py [--test_path] [--result_save] [--image_dir]
 ```
 
 * `--test_path` : test_directory_path
