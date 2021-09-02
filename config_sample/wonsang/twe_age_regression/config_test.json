@@ -1,0 +1,35 @@
+{
+    "name": "mask_two_age_regression",
+    "n_gpu": 1,
+
+    "model": {
+        "type": "WSTwoClassifierTwoAgeRegressionModel",
+        "args": {}
+    },
+    "checkpoint_path":  "/tmp/PycharmProjects/image-classification-level1-12_team/saved/models/mask_two_age_regression/0902_093725/checkpoint-epoch1.pth",
+    "dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/mask_data/train/images/",
+            "csv_path": "/opt/ml/mask_data/train/test_df.csv",
+            "num_folds": 1
+        }
+    },
+    "transform": "ws_cc_384_288_norm55",
+    "target_transform": "ws_target_two_classifier_one_regression_age60p10",
+    "data_loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": false
+    },
+    "loss": "ws_two_ce_one_weighted_mse_loss_0015",
+    "metrics": [
+        "ws_total_accuracy_for_2_classifier_1_regression",
+        "ws_mask_accuracy_from_3_output",
+        "ws_gender_accuracy_from_3_output",
+        "ws_age_accuracy_from_3_output",
+        "ws_f1_from_3_output"
+    ],
+
+    "save_dir": "saved/"
+}

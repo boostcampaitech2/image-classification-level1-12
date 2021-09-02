@@ -1,0 +1,83 @@
+{
+    "name": "mask_two_age_regression",
+    "n_gpu": 1,
+
+    "train_model": {
+        "type": "WSTwoClassifierTwoAgeRegressionModel",
+        "args": {}
+    },
+    "training_dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/mask_data/train/images/",
+            "csv_path": "/opt/ml/mask_data/train/train_df.csv",
+            "num_folds": 5,
+            "set_num": 0,
+            "stratified": true,
+            "person_shuffle": true,
+            "kfold_random_state": 74,
+            "training": true
+        }
+    },
+    "valid_dataset": {
+        "type": "MaskTrainDataset",
+        "args":{
+            "root": "/opt/ml/mask_data/train/images/",
+            "csv_path": "/opt/ml/mask_data/train/train_df.csv",
+            "num_folds": 5,
+            "set_num": 0,
+            "stratified": true,
+            "person_shuffle": true,
+            "kfold_random_state": 74,
+            "training": false
+        }
+    },
+    "training_transform": "ws_cc_384_288_rhf_norm55",
+    "valid_transform": "ws_cc_384_288_norm55",
+    "train_target_transform": "ws_target_two_classifier_one_regression_age60p10",
+    "valid_target_transform": "ws_target_two_classifier_one_regression_age60p10",
+    "training_data_loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": true
+    },
+    "valid_data_loader": {
+        "batch_size": 64,
+        "num_workers": 2,
+        "shuffle": true
+    },
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 1e-4,
+            "weight_decay": 1e-4,
+            "amsgrad": true
+        }
+    },
+    "loss": "ws_two_ce_one_weighted_mse_loss_0015",
+    "metrics": [
+        "ws_total_accuracy_for_2_classifier_1_regression",
+        "ws_mask_accuracy_from_3_output",
+        "ws_gender_accuracy_from_3_output",
+        "ws_age_accuracy_from_3_output",
+        "ws_f1_from_3_output"
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 50,
+            "gamma": 0.1
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+        "save_period": 1,
+        "verbosity": 2,
+        
+        "monitor": "min val_loss",
+        "early_stop": 10,
+
+        "tensorboard": true
+    },
+    "save_dir": "saved/"
+}
