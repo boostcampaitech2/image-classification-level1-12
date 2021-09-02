@@ -2,6 +2,7 @@ from torchvision import models as models
 import torch.nn as nn
 import math
 
+
 class MaskModel(nn.Module):
     """
     __init__(self, classes):
@@ -10,12 +11,13 @@ class MaskModel(nn.Module):
     init_params(self):
     initialization parameters to all networks
     """
+
     def __init__(self, classes):
         super().__init__()
         self.models = models.resnet34(pretrained=True)
         self.models.fc = nn.Linear(512, classes)
-        print(f'network # input channel : {self.models.conv1.weight.size(1)}')
-        print(f'network # output channel : {self.models.fc.weight.shape[0]}')
+        print(f"network # input channel : {self.models.conv1.weight.size(1)}")
+        print(f"network # output channel : {self.models.fc.weight.shape[0]}")
         nn.init.xavier_uniform_(self.models.fc.weight)
         stdv = 1.0 / math.sqrt(self.models.fc.weight.size(1))
         self.models.fc.bias.data.uniform_(-stdv, stdv)
@@ -24,8 +26,8 @@ class MaskModel(nn.Module):
         logit = self.models(x)
         return logit
 
-class MickeyDenseNet(nn.Module):
 
+class MickeyDenseNet(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
         self.models = models.densenet121(pretrained=True)
