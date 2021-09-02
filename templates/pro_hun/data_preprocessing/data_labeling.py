@@ -79,11 +79,12 @@ if __name__ == "__main__":
     )
     make_label.labeling()
 
-    # 에러 데이터 처리 코드 -> 결과가 오히려 안좋아져서 보류
+    
     df = pd.read_csv('/opt/ml/image-classification-level1-12/templates/data/train/train_with_label.csv')
-    error_list = ['006359', '006360', '006361', '006362', '006363', '006364', '001498-1', '004432', '000020', '004418', '005227']
     
 
+    # 에러 데이터 수정 코드 -> 결과가 오히려 안좋아져서 보류
+    # error_list = ['006359', '006360', '006361', '006362', '006363', '006364', '001498-1', '004432', '000020', '004418', '005227']
     # df['error_check'] = df['name'].map(lambda x : 1
     #             if ('006359' in x or '006360' in x or '006361' in x or '006362' in x or '006363' in x or '006364' in x)
     #             else (2 if ('001498-1' in x or '004432' in x)
@@ -95,4 +96,8 @@ if __name__ == "__main__":
     #                             else (x['label']-6 if (x['error_check']==3 and 'normal' in x['name']) else x['label']))), axis=1)
 
     # df.drop(columns=['error_check'], inplace=True)
+
+    # 에러 데이터 단순 삭제
+    # df[df['name'].map(lambda x: x.split('_')[0] not in error_list)].reset_index(drop=True).to_csv('/opt/ml/image-classification-level1-12/templates/data/train/train_with_all_fix.csv', index=False)
+
     # df.to_csv("/opt/ml/image-classification-level1-12/templates/data/train/train_with_label.csv", index=False)
