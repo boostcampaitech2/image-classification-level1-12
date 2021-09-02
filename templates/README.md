@@ -26,68 +26,55 @@
 |            [이든](https://herjh0405.tistory.com/)            |            [펭귄](https://velog.io/@mickeyshoes)             | [샐리](https://shimmering-form-67a.notion.site/WEEK-e0a8cfccd85a43fca143a14641de8e30) |         [엠제이](https://minjoon950425.tistory.com/)         |  [원딜](https://github.com/changwoomon/Boostcamp-AI-Tech/)   | [후미](https://dreaming-lee.notion.site/boostcamp-archive-44d6ea71b8bf4c0e9dc8d37e57ebbf5f) |
 |              `데이터분석` `CV`<br>  `음성인식`               |                `CV` `모델 서빙` <br> `백엔드`                |                        `CV` `AutoML`                         |                             `CV`                             |                          `CV` `GNN`                          |                             `CV`                             |
 
-## Data Preprocessing
-
----
-
-### Face Crop
+# Data Preprocessing
+## Face Crop
 
 * `cvlib` - By cvlib.detect_face, crop face+cloth coordinate(x, y, w, h)
 
-## Model
-
----
-
-### Backbone
+# Model
+## Backbone
 
 * `ResNet18`(https://pytorch.org/hub/pytorch_vision_resnet/) - model fine-tuning
 
-### Loss
+## Loss
 
 * `Focal loss` (gamma = 2)
 
-### Optimizer
+## Optimizer
 
 * `Adam`
 
-### Albumentation
+## Albumentation
 
 * `Resize `
 * `GaussianBlur`
 * `Normalize`
 * `HorizontalFlip`
 
-### Wandb log
+## Wandb log
 
 ![image-20210902192217807](https://raw.githubusercontent.com/herjh0405/Img/master/img/image-20210902192217807.png)
 
-## Performance
-
----
-
-### Public
+# Performance
+## Public
 
 * F1 Score : 0.763
 * Accuracy : 79.206%
 
-### Private
+## Private
 
 * F1 Score : 0.744
 * Accuracy : 78.333%
 
-## Hardware
-
----
+# Hardware
 
 * Ubuntu 18.04.5 LTS
 * Intel(R) Xeon(R) Gold 5120 CPU @ 2.20GHz
 * Tesla V100 32GB
 
-## Getting Started
+# Getting Started
 
----
-
-### File Structure
+## File Structure
 
 ```text
 pro_hun/
@@ -111,7 +98,7 @@ pro_hun/
   └── util.py
 ```
 
-### Dependencies
+## Dependencies
 
 * torch==1.7.1
 * torchvision==0.8.2
@@ -126,11 +113,11 @@ pro_hun/
 * tqdm==4.62.2
 * wandb==0.12.1
 
-### Install Requirements
+## Install Requirements
 
 `pip install -r requirements.txt`
 
-### Training
+## Training
 
 `python train.py [-lr] [-bs] [--epoch] [--train_path] [--model_save] [--image_data] [--image_dir]`
 
@@ -142,7 +129,7 @@ pro_hun/
 * `--image_data` : CSV according to image type(Original, Crop, All), default='train_with_all.csv'
 * `--image_dir` : Directory according to image type, default='ori_image_all'
 
-### Evaluation
+## Evaluation
 
 `python test.py [--test_path] [--result_save] [--image_dir]` 
 
