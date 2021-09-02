@@ -7,10 +7,11 @@ import PIL
 from sklearn.model_selection import KFold, StratifiedKFold
 from torchvision.datasets.vision import VisionDataset
 
-from data_process.class_converter import mask_to_mask_class, age_to_age_class
+from data_process.class_converter import sm_mask_to_mask_class, age_to_age_class
 
 
-TRAIN_MASK_FILE_NAMES = ("normal", "mask1", "mask2", "mask3", "mask4", "mask5", "incorrect_mask")
+TRAIN_MASK_FILE_NAMES = ("normal", "mask1", "mask2", "mask3", "mask4", "mask5", "incorrect_mask",
+                        "normal_hf", "mask1_hf", "mask2_hf", "mask3_hf", "mask4_hf", "mask5_hf", "incorrect_mask_hf")
 TRAIN_FEATURES = ("id", "gender", "age_class", "image_path")
 GENDERS = ("male", "female")
 AGE_CLASSES = ("<30", ">=30 and <60", ">=60")
@@ -84,7 +85,7 @@ class MaskTrainDataset(VisionDataset):
                         data_list.append(data)
 
                         class_tuple = (
-                            str(mask_to_mask_class(mask_file_name)),
+                            str(sm_mask_to_mask_class(mask_file_name)),
                             meta_row["gender"],
                             str(age_to_age_class(meta_row["age"]))
                         )
@@ -130,6 +131,9 @@ class MaskTrainDataset(VisionDataset):
         # make the full paths(without extension) of images and save them with target infos to the list
         self.image_path_and_meta_list = list()
         for a_data in selected_meta_data:
+            # 60대 미만인데 추가된 데이터의 이름을 가지고 있는 경우 패스
+            if a_data['age']< 60 and '_hf' in a_data['mask_file_name']:
+                continue
             image_path = os.path.join(root + "/" + a_data["path"] + "/" + a_data["mask_file_name"])
             self.image_path_and_meta_list.append((image_path, a_data))
 

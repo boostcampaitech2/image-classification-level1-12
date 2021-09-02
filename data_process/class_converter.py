@@ -43,3 +43,14 @@ def convert_3class_to_1class_batch_tensor(output: Tuple[torch.Tensor, torch.Tens
     age_pred = torch.argmax(output[2], dim=1)
 
     return torch.mul(mask_pred, 6) + torch.mul(gender_pred, 3) + age_pred
+
+
+def sm_mask_to_mask_class(mask_type: str) -> int:
+    if mask_type.startswith("mask"):
+        return 0
+    elif mask_type in ["incorrect_mask", "incorrect_mask_hf"]:
+        return 1
+    elif mask_type in ["normal", "normal_hf"]:
+        return 2
+    else:
+        raise ValueError(f'Mask type - "{mask_type}" is not available.')

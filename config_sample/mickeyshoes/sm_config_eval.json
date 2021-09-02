@@ -5,23 +5,24 @@
     "model": {
         "type": "MickeyMaskModel",
         "args": {
-            "num_classes": 18
+            "num_classes": 18,
+            "version_number": 18
         }
     },
-    "checkpoint_path":  "/tmp/PycharmProjects/image-classification-level1-12_team/saved/mickeyshoes/models/team_baseline/0830_122840/focal_best.pth",
+    "checkpoint_path":  "/opt/ml/team12/image-classification-level1-12/saved/mickeyshoes/models/team_baseline/0902_013221/model_best.pth",
     "dataset": {
         "type": "MaskEvalDataset",
         "args":{
-            "root": "/opt/ml/mask_data/eval/images/",
+            "root": "/opt/ml/mask_data/eval/images",
             "csv_path": "/opt/ml/mask_data/eval/info.csv"
         }
     },
-    "transform": "baseline_valid_transform",
+    "transform": "mickeyshoes_valid_transform",
     "data_loader": {
         "batch_size": 128,
         "num_workers": 1
     },
-    "submisson_path": "./saved/submission/mickey_submission.csv",
+    "submisson_path": "./saved/submission/0902_18_final_submission.csv",
 
     "save_dir": "saved/mickeyshoes_eval/"
 }

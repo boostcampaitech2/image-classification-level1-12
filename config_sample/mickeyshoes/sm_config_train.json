@@ -5,15 +5,16 @@
     "train_model": {
         "type": "MickeyMaskModel",
         "args": {
-            "num_classes": 18
+            "num_classes": 18,
+            "version_number": 18
         }
     },
     "training_dataset": {
         "type": "MaskTrainDataset",
         "args":{
-            "root": "/opt/ml/mask_data/train/images/",
-            "csv_path": "/opt/ml/mask_data/train/train_df.csv",
-            "num_folds": 5,
+            "root": "/opt/ml/data/train/images",
+            "csv_path": "/opt/ml/data/train/train_dt.csv",
+            "num_folds": 3,
             "set_num": 0,
             "stratified": true,
             "person_shuffle": true,
@@ -24,9 +25,9 @@
     "valid_dataset": {
         "type": "MaskTrainDataset",
         "args":{
-            "root": "/opt/ml/mask_data/train/images/",
-            "csv_path": "/opt/ml/mask_data/train/train_df.csv",
-            "num_folds": 5,
+            "root": "/opt/ml/data/train/images",
+            "csv_path": "/opt/ml/data/train/train_dt.csv",
+            "num_folds": 3,
             "set_num": 0,
             "stratified": true,
             "person_shuffle": true,
@@ -34,10 +35,10 @@
             "training": false
         }
     },
-    "training_transform": "baseline_training_transform",
-    "valid_transform": "baseline_valid_transform",
-    "train_target_transform": "baseline_train_target_transform",
-    "valid_target_transform": "baseline_train_target_transform",
+    "training_transform": "mickeyshoes_training_transform",
+    "valid_transform": "mickeyshoes_valid_transform",
+    "train_target_transform": "mickeyshoes_train_target_transform",
+    "valid_target_transform": "mickeyshoes_train_target_transform",
     "training_data_loader": {
         "batch_size": 128,
         "num_workers": 1,
@@ -61,10 +62,10 @@
         "accuracy", "f1"
     ],
     "lr_scheduler": {
-        "type": "StepLR",
+        "type": "CosineAnnealingLR",
         "args": {
-            "step_size": 50,
-            "gamma": 0.1
+            "T_max": 10,
+            "eta_min": 0
         }
     },
     "trainer": {
@@ -73,7 +74,7 @@
         "verbosity": 2,
         
         "monitor": "min val_loss",
-        "early_stop": 5,
+        "early_stop": 3,
 
         "tensorboard": true
     },

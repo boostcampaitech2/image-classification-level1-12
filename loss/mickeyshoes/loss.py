@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 # boostcamp baseline code
 # https://discuss.pytorch.org/t/is-this-a-correct-implementation-for-focal-loss-in-pytorch/43327/8
-class FocalLoss(nn.Module):
+class SMFocalLoss(nn.Module):
     def __init__(self, weight=None,
                  gamma=2., reduction='mean'):
         nn.Module.__init__(self)
@@ -22,4 +22,4 @@ class FocalLoss(nn.Module):
             reduction=self.reduction
         )
 
-focal_loss = FocalLoss()
+focal_loss = SMFocalLoss()
