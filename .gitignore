@@ -25,8 +25,6 @@ wheels/
 .installed.cfg
 *.egg
 output/**
-**/MY_FONT/**
-**/MY_FONT.zip
 **/wandb/**
 
 # PyInstaller
