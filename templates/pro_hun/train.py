@@ -215,12 +215,12 @@ if __name__ == "__main__":
         best_test_accuracy = 0.0
         best_test_loss = 9999.0
 
-        # flag = True
-        # early_ind = 0
+        flag = True
+        early_ind = 0
         pred_f1 = 0.0
         for epoch in range(args.epoch):
-            # if not (flag):
-            #     break
+            if not (flag):
+                break
             for phase in [TRAIN_FLAG, TEST_FLAG]:
                 n_iter = 0
                 running_loss = 0.0
@@ -294,19 +294,19 @@ if __name__ == "__main__":
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
                 # Early Stopping Code
-                # if phase == TEST_FLAG:
-                #     if pred_f1 <= epoch_f1:
-                #         pred_f1 = epoch_f1
-                #         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
-                #         print(f"{epoch}번째 모델 저장!")
-                #         early_ind = 0
-                #     else:
-                #         print(f"{epoch}번째 모델 pass")
-                # early_ind += 1
-                # if early_ind == 2:
-                #     flag = False
-                #     break
-        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
+                if phase == TEST_FLAG:
+                    if pred_f1 <= epoch_f1:
+                        pred_f1 = epoch_f1
+                        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
+                        print(f"{epoch}번째 모델 저장!")
+                        early_ind = 0
+                    else:
+                        print(f"{epoch}번째 모델 pass")
+                early_ind += 1
+                if early_ind == 2:
+                    flag = False
+                    break
+        # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
     ed_time = time.time()
