@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import albumentations as A
+import cv2
 
 class MakeLocateDataFrame():
     
@@ -77,3 +79,42 @@ class MakeLocateDataFrame():
             labeled_dict = datas
 
         return labeled_dict
+
+    def over_60_data_augmentation(self, data):
+        #get datas over 60
+        over_60 = data.query('age==60')
+
+        if not over_60.empty:
+            ORIGIN_FILENAME = ("normal", "mask1", "mask2", "mask3", "mask4", "mask5", "incorrect_mask")
+            REWRITE_FILENAME = ("normal_hf", "mask1_hf", "mask2_hf", "mask3_hf", "mask4_hf", "mask5_hf", "incorrect_mask_hf")
+            file_rename = []
+
+            transform = A.Compose([
+                # A.RandomCrop(width=256, height=256),
+                A.HorizontalFlip(p=1),
+                A.Cutout(num_holes=1,max_h_size=100, max_w_size=100,p=0.7)
+            ])
+
+            # transform image to save
+            for image_locate in over_60['locate']:
+                img = cv2.imread(image_locate)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                image_transform = transform(image=img)
+                
+                # make locate to save image
+                loc_split = image_locate.split('/')
+                filename, extension = loc_split[-1].split('.')
+                loc_split[-1] = REWRITE_FILENAME[ORIGIN_FILENAME.index(filename)]+'.'+extension
+                rename_locate = '/'.join(loc_split)
+                file_rename.append(rename_locate)
+                # albumentation 처리된 후에 dict 로 반환되어 이미지만 따로 빼야함
+                cv2.imwrite(filename=rename_locate, img=image_transform['image'])
+            
+            over_60['locate'] = file_rename
+            total_data = data.append(over_60)
+            return total_data
+
+        else:
+            raise ValueError("You should put labeled csv file.")
+
+

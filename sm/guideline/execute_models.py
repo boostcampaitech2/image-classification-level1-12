@@ -111,7 +111,7 @@ def main():
 
         # get model
         model = MaskModel(NUM_CLASSES).to(DEVICE)
-        model.load_state_dict(torch.load('./model_results/model_08_29_17_14.pt'))
+        model.load_state_dict(torch.load('./model_results/model_best.pth'))
         
         #test
         with torch.no_grad():

@@ -1,2 +1,4 @@
 results/
 model_results/
+*.csv
+*.jpg
