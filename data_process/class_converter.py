@@ -44,7 +44,7 @@ def convert_3class_to_1class_batch_tensor(output: Tuple[torch.Tensor, torch.Tens
 
     return torch.mul(mask_pred, 6) + torch.mul(gender_pred, 3) + age_pred
 
-
+# for upsampling file
 def sm_mask_to_mask_class(mask_type: str) -> int:
     if mask_type.startswith("mask"):
         return 0
