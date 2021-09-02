@@ -73,17 +73,13 @@
 * Tesla V100 32GB
 
 ## 🎮Getting Started
-
-### File Structure
-
 ```text
-pro_hun/
 ├── base
-│  └── baseline.ipynb		# Introduction & EDA Baseline
+│  └── baseline.ipynb     # Introduction & EDA Baseline
 ├── data_preprocessing
-│  ├── data_labeling.py		# Data labeling(18 classes&Error Fix)
-│  ├── data_split.py		# Apply StratifiedKFold
-│  └── image_crop.ipynb		# Crop face by cvlib
+│  ├── data_labeling.py   # Data labeling(18 classes&Error Fix)
+│  ├── data_split.py      # Apply StratifiedKFold
+│  └── image_crop.ipynb   # # Crop face by cvlib
 ├── experiment
 │  └── model_test.ipynb
 ├── model
@@ -91,6 +87,8 @@ pro_hun/
 │  ├── metric.py
 │  └── model.py
 ├── requirements.txt
+├── templates
+│  └── tree.txt
 ├── test.py
 ├── train.py
 └── utils
