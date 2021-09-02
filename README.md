@@ -26,12 +26,12 @@
 |            [이든](https://herjh0405.tistory.com/)            |            [펭귄](https://velog.io/@mickeyshoes)             | [샐리](https://shimmering-form-67a.notion.site/WEEK-e0a8cfccd85a43fca143a14641de8e30) |         [엠제이](https://minjoon950425.tistory.com/)         |  [원딜](https://github.com/changwoomon/Boostcamp-AI-Tech/)   | [후미](https://dreaming-lee.notion.site/boostcamp-archive-44d6ea71b8bf4c0e9dc8d37e57ebbf5f) |
 |              `데이터분석` `CV`<br>  `음성인식`               |                `CV` `모델 서빙` <br> `백엔드`                |                        `CV` `AutoML`                         |                             `CV`                             |                          `CV` `GNN`                          |                             `CV`                             |
 
-## Data Preprocessing
+## 😄Data Preprocessing
 ### Face Crop
 
 * `cvlib` - By cvlib.detect_face, crop face+cloth coordinate(x, y, w, h)
 
-## Model
+## 👨🏾‍💻Model
 ### Backbone
 
 * `ResNet18`(https://pytorch.org/hub/pytorch_vision_resnet/) - model fine-tuning
@@ -55,7 +55,7 @@
 
 ![image-20210902192217807](https://raw.githubusercontent.com/herjh0405/Img/master/img/image-20210902192217807.png)
 
-## Performance
+## 💯Performance
 ### Public
 
 * F1 Score : 0.763
@@ -66,13 +66,13 @@
 * F1 Score : 0.744
 * Accuracy : 78.333%
 
-## Hardware
+## 💻Hardware
 
 * Ubuntu 18.04.5 LTS
 * Intel(R) Xeon(R) Gold 5120 CPU @ 2.20GHz
 * Tesla V100 32GB
 
-## Getting Started
+## 🎮Getting Started
 
 ### File Structure
 
