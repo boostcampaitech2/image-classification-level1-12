@@ -1,37 +1,26 @@
 import argparse
 import datetime as dt
-import math
 import os
-import random
 import time
-from functools import partial
-from pathlib import Path
 import wandb
 
 import albumentations
 import albumentations.pytorch
 import cv2
-import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision
 import tqdm
-from PIL import Image
 from pytz import timezone
 from torch.utils.data import DataLoader
-from torchvision import datasets, models, transforms
-from torchvision.models import resnet18, resnet34
-from torchvision.models.resnet import resnet50, resnet152
-from torchvision.transforms import Normalize, Resize, ToTensor
-from torchvision.transforms.transforms import GaussianBlur, RandomRotation, RandomHorizontalFlip, GaussianBlur
+from torchvision.models import resnet18
 
 from data_preprocessing.data_split import Run_Split
 from model.loss import batch_loss
 from model.metric import batch_acc, batch_f1, epoch_mean
-from model.model import resnet_finetune, effinetB3
-from utils.util import ensure_dir, notification, prepare_device, fix_randomseed, draw_confusion_matrix
+from model.model import resnet_finetune
+from utils.util import ensure_dir, notification, prepare_device, fix_randomseed
 
 
 class FocalLoss(nn.Module):
@@ -153,18 +142,12 @@ if __name__ == "__main__":
     print(f"{device} is using!")
 
     data_transform = albumentations.Compose([
+        # albumentations.Resize(512, 384, cv2.INTER_LINEAR),
         albumentations.Resize(224, 224, cv2.INTER_LINEAR),
         albumentations.GaussianBlur(3, sigma_limit=(0.1, 2)),
         albumentations.Normalize(mean=args.normalize_mean, std=args.normalize_std),
-        albumentations.HorizontalFlip(p=0.5),
-        # albumentations.OneOf([
-    	# 	albumentations.HorizontalFlip(p=1),
-    	# 	albumentations.Rotate([-10, 10], p=1),
-        # ], p=0.5),
+        albumentations.HorizontalFlip(p=0.5), # Same with transforms.RandomHorizontalFlip()
         albumentations.pytorch.transforms.ToTensorV2(),
-        # albumentations.RandomCrop(224, 224),
-        # albumentations.RamdomCrop, CenterCrop, RandomRotation
-        # albumentations.HorizontalFlip(), # Same with transforms.RandomHorizontalFlip()
     ])
 
 
@@ -179,15 +162,13 @@ if __name__ == "__main__":
     for i in range(fold_num):
         # Resnent 18 네트워크의 Tensor들을 GPU에 올릴지 Memory에 올릴지 결정함
         mnist_resnet = resnet_finetune(resnet18, 18).to(device)
-        # mnist_resnet = effinetB3()
         wandb.watch(mnist_resnet)
 
         # 분류 학습 때 많이 사용되는 Cross entropy loss를 objective function으로 사용 - https://en.wikipedia.org/wiki/Cross_entropy
         loss_fn = FocalLoss()
         # weight 업데이트를 위한 optimizer를 Adam으로 사용함
         optimizer = torch.optim.Adam(mnist_resnet.parameters(), lr=args.learning_rate)
-        # lr_sched = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=0)
-        # lrs = []
+
 
         train_dataset = Mask_Dataset(
             data_transform, f"train{i}", train_list[i], train_path, args.image_folder
@@ -215,12 +196,8 @@ if __name__ == "__main__":
         best_test_accuracy = 0.0
         best_test_loss = 9999.0
 
-        # flag = True
-        # early_ind = 0
-        # pred_f1 = 0.0
+
         for epoch in range(args.epoch):
-            # if not (flag):
-            #     break
             for phase in [TRAIN_FLAG, TEST_FLAG]:
                 n_iter = 0
                 running_loss = 0.0
@@ -240,9 +217,7 @@ if __name__ == "__main__":
 
                     optimizer.zero_grad()  # parameter gradient를 업데이트 전 초기화함
 
-                    # confusion matrix
-                    # y_pred = np.array([])
-                    # y_true = np.array([])
+
                     with torch.set_grad_enabled(
                         phase == TRAIN_FLAG
                     ):  # train 모드일 시에는 gradient를 계산하고, 아닐 때는 gradient를 계산하지 않아 연산량 최소화
@@ -255,13 +230,7 @@ if __name__ == "__main__":
                         if phase == TRAIN_FLAG:
                             loss.backward()  # 모델의 예측 값과 실제 값의 CrossEntropy 차이를 통해 gradient 계산
                             optimizer.step()  # 계산된 gradient를 가지고 모델 업데이트
-                            # lr_sched.step()
-                            # lrs.append(optimizer.param_groups[0]["lr"])
 
-                        # confusion matrix
-                    #     y_true =  np.concatenate([y_true, labels.cpu().view(-1).numpy()])
-                    #     y_pred = np.concatenate([y_pred, preds.cpu().view(-1).numpy()])
-                    # draw_confusion_matrix(y_true, pred=y_pred)
 
                     running_loss += batch_loss(loss, images)  # 한 Batch에서의 loss 값 저장
                     running_acc+= batch_acc(
@@ -275,7 +244,6 @@ if __name__ == "__main__":
                         wandb.log({'loss':loss})
                         wandb.log({'lr':args.learning_rate})
 
-                # print(lrs[-1])
                 # 한 epoch이 모두 종료되었을 때,
                 data_len = len(dataloaders[phase].dataset)
                 epoch_loss = epoch_mean(running_loss, data_len)
@@ -293,20 +261,9 @@ if __name__ == "__main__":
                     phase == TEST_FLAG and best_test_loss > epoch_loss
                 ):  # phase가 test일 때, best loss 계산
                     best_test_loss = epoch_loss
-                # Early Stopping Code
-                # if phase == TEST_FLAG:
-                #     if pred_f1 <= epoch_f1:
-                #         pred_f1 = epoch_f1
-                #         torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
-                #         print(f"{epoch}번째 모델 저장!")
-                #         early_ind = 0
-                #     else:
-                #         print(f"{epoch}번째 모델 pass")
-                # early_ind += 1
-                # if early_ind == 2:
-                #     flag = False
-                #     break
-        # torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
+
+                    
+        torch.save(mnist_resnet, os.path.join(dirname, f"model_mnist{i}.pickle"))
         print("학습 종료!")
         print(f"최고 accuracy : {best_test_accuracy}, 최고 낮은 loss : {best_test_loss}")
     ed_time = time.time()
