@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import torch
+import shutil
+import os
 
 
 def ensure_dir(dirname):
@@ -58,3 +60,8 @@ def notification(best_acc):
     response = requests.post(url, data=json.dumps(slack_data), headers=headers)
     if response.status_code != 200:
         raise Exception(response.status_code, response.text)
+
+
+def copy_folder(dir_path, copy_dir):
+	if not Path(os.path.join(dir_path, copy_dir)).is_dir():
+		shutil.copytree(os.path.join(dir_path, 'images'), os.path.join(dir_path, copy_dir))

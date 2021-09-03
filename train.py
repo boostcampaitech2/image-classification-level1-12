@@ -73,13 +73,13 @@ if __name__ == "__main__":
     args.add_argument("--fold_size", default=5, type=int, help="StratifiedKFold size")
     args.add_argument(
         "--train_path",
-        default="/opt/ml/image-classification-level1-12/templates/data/train",
+        default="/opt/ml/image-classification-level1-12/data/train",
         type=str,
         help="train_directory_path",
     )
     args.add_argument(
         "--model_save",
-        default="/opt/ml/image-classification-level1-12/templates/pro_hun/output/model_save",
+        default="/opt/ml/image-classification-level1-12/output/model_save",
         type=str,
         help="model_save_path",
     )
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     # Original:image_all, Crop:image_crop_all
     args.add_argument(
         "--image_dir",
-        default="image_all",
+        default="ori_crop_split",
         type=str,
         help="Directory according to image type",
     )

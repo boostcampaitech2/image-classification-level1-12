@@ -39,13 +39,13 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser(description="PyTorch Template")
     args.add_argument(
         "--test_path",
-        default="/opt/ml/image-classification-level1-12/templates/data/eval",
+        default="/opt/ml/image-classification-level1-12/data/eval",
         type=str,
         help="eval_dir_path",
     )
     args.add_argument(
         "--result_save",
-        default="/opt/ml/image-classification-level1-12/templates/pro_hun/output/sub",
+        default="/opt/ml/image-classification-level1-12/output/sub",
         type=str,
         help="submission_save_path",
     )

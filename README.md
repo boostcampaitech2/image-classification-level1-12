@@ -1,5 +1,7 @@
 # 😷 Boostcamp AI Tech P-Stage 1 - Image Classification
+
 2021.08.23 ~ 2021.09.03
+
 ## 📑 Summary
 ### Mask status Classification
 
@@ -23,8 +25,8 @@
 |                            허정훈                            |                            임성민                            |                            조현동                            |                            황원상                            |                            오주영                            |                            이준혁                            |
 | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 | [![Avatar](https://avatars.githubusercontent.com/u/54921730?v=4)](https://github.com/herjh0405) | [![Avatar](https://avatars.githubusercontent.com/u/49228132?v=4)](https://github.com/mickeyshoes) | [![Avatar](https://avatars.githubusercontent.com/u/61579014?v=4)](https://github.com/JODONG2) | [![Avatar](https://avatars.githubusercontent.com/u/49892621?v=4)](https://github.com/WonsangHwang) | [![Avatar](https://avatars.githubusercontent.com/u/69762559?v=4)](https://github.com/Jy0923) | [![Avatar](https://avatars.githubusercontent.com/u/49234207?v=4)](https://github.com/kmouleejunhyuk) |
-|            [이든](https://herjh0405.tistory.com/)            |            [펭귄](https://velog.io/@mickeyshoes)             | [샐리](https://shimmering-form-67a.notion.site/WEEK-e0a8cfccd85a43fca143a14641de8e30) |         [엠제이](https://minjoon950425.tistory.com/)         |  [원딜](https://github.com/changwoomon/Boostcamp-AI-Tech/)   | [후미](https://dreaming-lee.notion.site/boostcamp-archive-44d6ea71b8bf4c0e9dc8d37e57ebbf5f) |
-|              `데이터분석` `CV`<br>  `음성인식`               |                `CV` `모델 서빙` <br> `백엔드`                |                        `CV` `AutoML`                         |                             `CV`                             |                          `CV` `GNN`                          |                             `CV`                             |
+|        [주영교 신자](https://herjh0405.tistory.com/)         |      [오주영그는신이야](https://velog.io/@mickeyshoes)       | [zi존부캠](https://shimmering-form-67a.notion.site/WEEK-e0a8cfccd85a43fca143a14641de8e30) |                          이팀의멘토                          |                           정훈찡❤                            | [최고의 모델러 허정훈](https://dreaming-lee.notion.site/boostcamp-archive-44d6ea71b8bf4c0e9dc8d37e57ebbf5f) |
+|              `데이터분석` `CV`<br>  `음성인식`               |                `CV` `모델 서빙` <br> `백엔드`                |                        `CV` `AutoML`                         |                             `CV`                             |                   `CV` `Generative Model`                    |                             `CV`                             |
 
 ## 😄Data Preprocessing
 ### Face Crop
@@ -69,7 +71,8 @@
 ## 💻Hardware
 
 * Ubuntu 18.04.5 LTS
-* Intel(R) Xeon(R) Gold 5120 CPU @ 2.20GHz
+* Intel(R) Xeon(R) Gold 5120 CPU @ 2.20GHz 중 논리코어 8개
+* Ram 90GB
 * Tesla V100 32GB
 
 ## 🎮Getting Started
@@ -83,9 +86,9 @@ pro_hun/
 ├── data_preprocessing
 │  ├── data_labeling.py		# Data labeling(18 classes&Error Fix)
 │  ├── data_split.py		# Apply StratifiedKFold
-│  └── image_crop.ipynb		# Crop face by cvlib
+│  └── image_crop.py		# Crop face by cvlib
 ├── experiment
-│  └── model_test.ipynb
+│  └── model_test.ipynb		# check submission distribution
 ├── model
 │  ├── loss.py
 │  ├── metric.py
@@ -117,7 +120,18 @@ pro_hun/
 ```
 $ pip install -r requirements.txt
 ```
+### Data Preprocessing
+
+* labeling, crop, split, 
+
+```
+$ python data_preprocessing/data_labeling.py
+$ python data_preprocessing/image_crop.py
+$ python data_preprocessing/data_split.py
+```
+
 ### Training
+
 ```
 $ python train.py [-lr] [-bs] [--epoch] [--train_path] [--model_save] [--image_data] [--image_dir]
 ```
@@ -139,6 +153,11 @@ $ python test.py [--test_path] [--result_save] [--image_dir]
 * `--result_save` : submission_save_path
 * `--image_dir` : Directory according to image type, default='crop_image'
 
+## Reproducing Submission
+
+To reproduct my submission, do the following steps:
+
+1. 
 
 
 

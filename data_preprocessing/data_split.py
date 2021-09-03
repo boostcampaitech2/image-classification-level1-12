@@ -62,7 +62,7 @@ if __name__ == "__main__":
     )
     args.add_argument("--fold_num", default=5, type=int, help="kfold_num")
     args.add_argument("--image_data", default="train_with_label.csv", type=str, help="CSV according to image type(Original, Crop, All)",)
-    args.add_argument("--image_dir", default="image_all", type=str, help="Directory according to image type",)
+    args.add_argument("--image_dir", default="images_split", type=str, help="Directory according to image type",)
     args = args.parse_args()
     np.random.seed(12)
     random.seed(12)
