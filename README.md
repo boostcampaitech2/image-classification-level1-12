@@ -90,14 +90,14 @@ pro_hun/
 ├── experiment
 │  └── model_test.ipynb		# check submission distribution
 ├── model
-│  ├── loss.py				# Focal loss
-│  ├── metric.py			# Acc, F1_score
+│  ├── loss.py			# Focal loss
+│  ├── metric.py		# Acc, F1_score
 │  └── model.py
 ├── requirements.txt
 ├── test.py
 ├── train.py
 └── utils
-  └── util.py				# For smooth processing
+  └── util.py			# For smooth processing
 ```
 
 ### Dependencies
