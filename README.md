@@ -1,6 +1,6 @@
 # 😷 Boostcamp AI Tech P-Stage 1 - Image Classification
 
-2021.08.23 ~ 2021.09.03
+2021.08.23 ~ 2021.09.03 [Wrap-up Report](https://bit.ly/38EbbIw)
 
 ## 📑 Summary
 ### Mask status Classification
