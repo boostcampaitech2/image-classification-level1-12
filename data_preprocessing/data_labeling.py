@@ -41,7 +41,7 @@ class Make_Label:
                 idx_df += 1
 
         # 새로 만든 DataFrame 저장
-        labeling_data_path = "/opt/ml/image-classification-level1-12/templates/data/train/train_with_label.csv"
+        labeling_data_path = "/opt/ml/image-classification-level1-12/data/train/train_with_label.csv"
         self.df.to_csv(labeling_data_path, index=False)
 
     # 대회 기준에 맞춰서 label 부여
@@ -69,7 +69,7 @@ class Make_Label:
 
 if __name__ == "__main__":
     # train 데이터 경로 지정
-    train_path = "/opt/ml/image-classification-level1-12/templates/data/train"
+    train_path = "/opt/ml/image-classification-level1-12/data/train"
     # train 데이터를 데이터프레임 형태로
     train_df = pd.read_csv(os.path.join(train_path, "train.csv"))
 
@@ -80,4 +80,4 @@ if __name__ == "__main__":
     make_label.labeling()
 
     
-    df = pd.read_csv('/opt/ml/image-classification-level1-12/templates/data/train/train_with_label.csv')
+    df = pd.read_csv('/opt/ml/image-classification-level1-12/data/train/train_with_label.csv')

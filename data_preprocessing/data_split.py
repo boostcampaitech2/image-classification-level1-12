@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 from sklearn.model_selection import StratifiedKFold
-sys.path.append('/opt/ml/image-classification-level1-12/templates/pro_hun')
+sys.path.append('/opt/ml/image-classification-level1-12')
 from utils.util import ensure_dir
 
 
@@ -21,7 +21,7 @@ class Run_Split:
         train dataset을 train, val에 맞춰서 폴더 재생성
 
         Args:
-        dirname (str): '/opt/ml/image-classification-level1-12/templates/data/train/image_all'
+        dirname (str): '/opt/ml/image-classification-level1-12/data/train/image_all'
         df (pd.DataFrame): train_df와 val_df
         df_name (str): 입력된 df에 맞춰서 입력
         """
@@ -56,22 +56,22 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser(description="PyTorch Template")
     args.add_argument(
         "--train_path",
-        default="/opt/ml/image-classification-level1-12/templates/data/train",
+        default="/opt/ml/image-classification-level1-12/data/train",
         type=str,
         help="train_path",
     )
     args.add_argument("--fold_num", default=5, type=int, help="kfold_num")
-    args.add_argument("--image_data", default="train_with_label.csv", type=str, help="Use Original or Original+Crop",)
-    args.add_argument("--image_folder", default="image_all", type=str, help="Split_image folder",)
+    args.add_argument("--image_data", default="train_with_label.csv", type=str, help="CSV according to image type(Original, Crop, All)",)
+    args.add_argument("--image_dir", default="image_all", type=str, help="Directory according to image type",)
     args = args.parse_args()
     np.random.seed(12)
     random.seed(12)
 
     # 그대로 실행하면 Original Data를 Split해주고,
-    # python pro_hun/data_preprocessing/data_split.py --image_data "train_with_crop.csv" --image_folder "image_crop_all"로 실행하면 Crop된 Data를 Split해줌
+    # python pro_hun/data_preprocessing/data_split.py --image_data "train_with_crop.csv" --image_dir "image_crop_all"로 실행하면 Crop된 Data를 Split해줌
     train_path = args.train_path
     train_label = pd.read_csv(os.path.join(train_path, args.image_data))
-    run_train = Run_Split(os.path.join(train_path, args.image_folder))
+    run_train = Run_Split(os.path.join(train_path, args.image_dir))
     fold_num = args.fold_num
     train_list, val_list = run_train.train_val_split(train_label, fold_num)
 

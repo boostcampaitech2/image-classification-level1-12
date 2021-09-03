@@ -107,7 +107,7 @@ if __name__ == "__main__":
         "--image_dir",
         default="image_all",
         type=str,
-        help="Split_image folder",
+        help="Directory according to image type",
     )
 
     args = args.parse_args()
