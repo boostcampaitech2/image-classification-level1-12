@@ -152,6 +152,12 @@ $ python test.py [--test_path] [--result_save] [--image_dir]
 * `--result_save` : submission_save_path
 * `--image_dir` : Directory according to image type, default='crop_image'
 
+## Acknowledgements
+본 프로젝트는 Victor Huang 의 PyTorch Template Project 을 기반으로 하여 개발되었습니다.
+
+## License
+This project is licensed under the MIT License. See LICENSE for more details.
+
 
 
 
