@@ -19,7 +19,8 @@
 ![image](https://user-images.githubusercontent.com/54921730/132083902-edabcce7-4ff7-4517-a1a5-f840fa86b57b.png)
 
 ## 👨‍🔬Result
-<img src='https://user-images.githubusercontent.com/54921730/132083921-9799aecc-9185-4779-943b-289e4c4f757e.png' width=900/>
+<img src='https://user-images.githubusercontent.com/54921730/132083921-9799aecc-9185-4779-943b-289e4c4f757e.png' width=900/>  
+
 * 주어진 데이터는 공개가 불가하여 내 사진과 팀원 사진, 저작권 공개된 사진을 이용해서 실험
 * 학습 데이터와 비슷한 경우 역시나 잘 맞춤
   * 하지만 실제 결과와 비슷하게 마스크로 눈과 코를 가린 경우 맞추기 힘들어 함 
