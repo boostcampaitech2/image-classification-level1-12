@@ -93,6 +93,7 @@ if __name__ == "__main__":
     # model_path = '/opt/ml/image-classification-level1-12/templates/pro_hun/output/model/model_2021-08-25_004053'
     model_path = input("학습한 모델의 경로를 입력해주세요 : ")
 
+
     model_listdir = os.listdir(model_path)
     all_predictions = [[] for _ in range(len(loader))]
     for moli in model_listdir:
@@ -125,5 +126,5 @@ if __name__ == "__main__":
     now = (
         dt.datetime.now().astimezone(timezone("Asia/Seoul")).strftime("%Y-%m-%d_%H%M%S")
     )
-    submission.to_csv(os.path.join(args.result_save, f"sub_{now}.csv"))
+    submission.to_csv(os.path.join(args.result_save, f"sub_{now}.csv"), index=False)
     print("test inference is done!")
