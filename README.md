@@ -16,7 +16,7 @@
 
 총 18개의 label 분류  
 
-![image](https://user-images.githubusercontent.com/54921730/132083902-edabcce7-4ff7-4517-a1a5-f840fa86b57b.png)
+<img src='https://user-images.githubusercontent.com/54921730/132083902-edabcce7-4ff7-4517-a1a5-f840fa86b57b.png' width=900 height=500/>
 
 ## 👨‍🔬Result
 <img src='https://user-images.githubusercontent.com/54921730/132083921-9799aecc-9185-4779-943b-289e4c4f757e.png' alt='132083921-9799aecc-9185-4779-943b-289e4c4f757e' width=900/>  
