@@ -63,16 +63,26 @@ def ws_age_accuracy_from_3_output(output: Tensor, target: Tensor) -> float:
     return correct / len(age_target_class)
 
 
-def ws_f1_from_3_output(output: Tensor, target: Tensor, average="macro") -> float:
+def ws_1_class_prediction_from_2_class_1_regression_output(output: Tensor) -> Tensor:
     with torch.no_grad():
         mask_pred = torch.argmax(output[:, :3], dim=1)
         gender_pred = torch.argmax(output[:, 3:5], dim=1)
         age_pred = ws_age_to_age_class(output[:, 5])
         total_pred = torch.mul(mask_pred, 6) + torch.mul(gender_pred, 3) + age_pred
+    return total_pred
 
+
+def ws_1_class_target_from_3_class_target(target: Tensor) -> Tensor:
+    with torch.no_grad():
         mask_target = target[:, 0].long()
         gender_target = target[:, 1].long()
         age_target = ws_age_to_age_class(target[:, 2])
         total_target = torch.mul(mask_target, 6) + torch.mul(gender_target, 3) + age_target
+    return total_target
+
+
+def ws_f1_from_3_output(output: Tensor, target: Tensor, average="macro") -> float:
+    total_pred = ws_1_class_prediction_from_2_class_1_regression_output(output)
+    total_target = ws_1_class_target_from_3_class_target(target)
 
     return f1_score(total_pred.detach().cpu().numpy(), total_target.detach().cpu().numpy(), average=average)

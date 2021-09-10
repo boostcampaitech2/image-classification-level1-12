@@ -10,6 +10,7 @@ from tqdm import tqdm
 import data_process.dataset as module_dataset
 import data_process.transform as module_transform
 import model as module_model
+import etc as module_etc
 from parse_config import ConfigParser
 
 
@@ -32,6 +33,11 @@ def main(config):
         model = torch.nn.DataParallel(model)
     model.load_state_dict(state_dict)
 
+    try:
+        pred_fn = getattr(module_etc, config['pred_fn'])
+    except KeyError:
+        pred_fn = module_etc.predict_from_one_classifier_output
+
     # prepare model for testing
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
@@ -42,7 +48,7 @@ def main(config):
         for i, (data, _) in enumerate(tqdm(data_loader)):
             data = data.to(device)
             output = model(data)
-            pred = torch.argmax(output, dim=1)
+            pred = pred_fn(output)
             all_predictions.extend(pred.detach().cpu().tolist())
 
     submission = pd.read_csv(config["dataset"]["args"]["csv_path"])
